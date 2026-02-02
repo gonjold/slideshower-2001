@@ -20,17 +20,17 @@ let visibility = {
 };
 
 let typo = {
-    yearFont: 'Barlow Condensed', yearWeight: 700, yearSize: 30, yearGap: 5,
-    makeFont: 'Bebas Neue', makeWeight: 400, makeSize: 66, makeGap: -15,
-    modelFont: 'Bebas Neue', modelWeight: 400, modelSize: 66, modelGap: -15,
-    trimFont: 'DM Sans', trimWeight: 600, trimSize: 26, trimGap: 50,
-    priceFont: 'Bebas Neue', priceWeight: 400, priceSize: 70, priceGap: 30,
-    hlFont: 'Barlow Condensed', hlWeight: 700, hlSize: 44, hlPad: 14, hlRadius: 8,
-    payFont: 'Bebas Neue', payWeight: 400, paySize: 60, payPad: 25,
-    badgeFont: 'Montserrat', badgeWeight: 700, badgeSize: 22,
-    downFont: 'DM Sans', downWeight: 500, downSize: 16,
-    discFont: 'Inter', discWeight: 400, discSize: 18,
-    marginOuter: 80, cardPad: 24, infoOffset: 50, headerTop: 50
+    yearFont: 'Toyota Type', yearWeight: 700, yearSize: 30, yearGap: 30,
+    makeFont: 'Toyota Type', makeWeight: 900, makeSize: 66, makeGap: -10,
+    modelFont: 'Toyota Type', modelWeight: 600, modelSize: 60, modelGap: -15,
+    trimFont: 'Toyota Type', trimWeight: 600, trimSize: 30, trimGap: 70,
+    priceFont: 'Toyota Type', priceWeight: 700, priceSize: 70, priceGap: 25,
+    hlFont: 'Toyota Type', hlWeight: 900, hlSize: 40, hlPad: 15, hlRadius: 10,
+    payFont: 'Toyota Type', payWeight: 700, paySize: 60, payPad: 15,
+    badgeFont: 'Toyota Type', badgeWeight: 900, badgeSize: 24,
+    downFont: 'DM Sans', downWeight: 500, downSize: 18,
+    discFont: 'Inter', discWeight: 700, discSize: 18,
+    marginOuter: 75, cardPad: 20, infoOffset: 55, headerTop: 65
 };
 
 // Global color overrides (empty = use theme defaults)
@@ -224,58 +224,66 @@ function updateWeightOptions(id) {
 }
 
 function saveTypo() {
-    typo.yearFont = document.getElementById('yearFont')?.value || typo.yearFont;
-    typo.yearWeight = +document.getElementById('yearWeight')?.value || 700;
-    typo.yearSize = +document.getElementById('yearSize')?.value || 30;
-    typo.yearGap = +document.getElementById('yearGap')?.value || 5;
+    const getVal = (id, def) => {
+        const el = document.getElementById(id);
+        if (!el) return def;
+        const v = +el.value;
+        return isNaN(v) ? def : v;
+    };
+    const getStr = (id, def) => document.getElementById(id)?.value || def;
     
-    typo.makeFont = document.getElementById('makeFont')?.value || typo.makeFont;
-    typo.makeWeight = +document.getElementById('makeWeight')?.value || 400;
-    typo.makeSize = +document.getElementById('makeSize')?.value || 66;
-    typo.makeGap = +document.getElementById('makeGap')?.value || -15;
+    typo.yearFont = getStr('yearFont', typo.yearFont);
+    typo.yearWeight = getVal('yearWeight', 700);
+    typo.yearSize = getVal('yearSize', 30);
+    typo.yearGap = getVal('yearGap', 30);
     
-    typo.modelFont = document.getElementById('modelFont')?.value || typo.modelFont;
-    typo.modelWeight = +document.getElementById('modelWeight')?.value || 400;
-    typo.modelSize = +document.getElementById('modelSize')?.value || 66;
-    typo.modelGap = +document.getElementById('modelGap')?.value || -15;
+    typo.makeFont = getStr('makeFont', typo.makeFont);
+    typo.makeWeight = getVal('makeWeight', 900);
+    typo.makeSize = getVal('makeSize', 66);
+    typo.makeGap = getVal('makeGap', -10);
     
-    typo.trimFont = document.getElementById('trimFont')?.value || typo.trimFont;
-    typo.trimWeight = +document.getElementById('trimWeight')?.value || 600;
-    typo.trimSize = +document.getElementById('trimSize')?.value || 26;
-    typo.trimGap = +document.getElementById('trimGap')?.value || 50;
+    typo.modelFont = getStr('modelFont', typo.modelFont);
+    typo.modelWeight = getVal('modelWeight', 600);
+    typo.modelSize = getVal('modelSize', 60);
+    typo.modelGap = getVal('modelGap', -15);
     
-    typo.priceFont = document.getElementById('priceFont')?.value || typo.priceFont;
-    typo.priceWeight = +document.getElementById('priceWeight')?.value || 400;
-    typo.priceSize = +document.getElementById('priceSize')?.value || 70;
-    typo.priceGap = +document.getElementById('priceGap')?.value || 30;
+    typo.trimFont = getStr('trimFont', typo.trimFont);
+    typo.trimWeight = getVal('trimWeight', 600);
+    typo.trimSize = getVal('trimSize', 30);
+    typo.trimGap = getVal('trimGap', 70);
     
-    typo.hlFont = document.getElementById('hlFont')?.value || typo.hlFont;
-    typo.hlWeight = +document.getElementById('hlWeight')?.value || 700;
-    typo.hlSize = +document.getElementById('hlSize')?.value || 44;
-    typo.hlPad = +document.getElementById('hlPad')?.value || 14;
-    typo.hlRadius = +document.getElementById('hlRadius')?.value || 8;
+    typo.priceFont = getStr('priceFont', typo.priceFont);
+    typo.priceWeight = getVal('priceWeight', 700);
+    typo.priceSize = getVal('priceSize', 70);
+    typo.priceGap = getVal('priceGap', 25);
     
-    typo.payFont = document.getElementById('payFont')?.value || typo.payFont;
-    typo.payWeight = +document.getElementById('payWeight')?.value || 400;
-    typo.paySize = +document.getElementById('paySize')?.value || 60;
-    typo.payPad = +document.getElementById('payPad')?.value || 25;
+    typo.hlFont = getStr('hlFont', typo.hlFont);
+    typo.hlWeight = getVal('hlWeight', 900);
+    typo.hlSize = getVal('hlSize', 40);
+    typo.hlPad = getVal('hlPad', 15);
+    typo.hlRadius = getVal('hlRadius', 10);
     
-    typo.badgeFont = document.getElementById('badgeFont')?.value || typo.badgeFont;
-    typo.badgeWeight = +document.getElementById('badgeWeight')?.value || 700;
-    typo.badgeSize = +document.getElementById('badgeSize')?.value || 22;
+    typo.payFont = getStr('payFont', typo.payFont);
+    typo.payWeight = getVal('payWeight', 700);
+    typo.paySize = getVal('paySize', 60);
+    typo.payPad = getVal('payPad', 15);
     
-    typo.downFont = document.getElementById('downFont')?.value || typo.downFont;
-    typo.downWeight = +document.getElementById('downWeight')?.value || 500;
-    typo.downSize = +document.getElementById('downSize')?.value || 16;
+    typo.badgeFont = getStr('badgeFont', typo.badgeFont);
+    typo.badgeWeight = getVal('badgeWeight', 900);
+    typo.badgeSize = getVal('badgeSize', 24);
     
-    typo.discFont = document.getElementById('discFont')?.value || typo.discFont;
-    typo.discWeight = +document.getElementById('discWeight')?.value || 400;
-    typo.discSize = +document.getElementById('discSize')?.value || 18;
+    typo.downFont = getStr('downFont', typo.downFont);
+    typo.downWeight = getVal('downWeight', 500);
+    typo.downSize = getVal('downSize', 18);
     
-    typo.marginOuter = +document.getElementById('marginOuter')?.value || 80;
-    typo.cardPad = +document.getElementById('cardPad')?.value || 24;
-    typo.infoOffset = +document.getElementById('infoOffset')?.value || 50;
-    typo.headerTop = +document.getElementById('headerTop')?.value || 50;
+    typo.discFont = getStr('discFont', typo.discFont);
+    typo.discWeight = getVal('discWeight', 700);
+    typo.discSize = getVal('discSize', 18);
+    
+    typo.marginOuter = getVal('marginOuter', 75);
+    typo.cardPad = getVal('cardPad', 20);
+    typo.infoOffset = getVal('infoOffset', 55);
+    typo.headerTop = getVal('headerTop', 65);
     
     updateSliderVals();
     saveStorage();
@@ -293,14 +301,49 @@ function updateSliderVals() {
 
 // COLORS UI
 function loadColorsUI() {
+    const T = THEMES[slideTheme];
+    // Map of color keys to their theme default values
+    const themeDefaults = getThemeColorMap(T);
+    
     Object.keys(colors).forEach(key => {
         const picker = document.getElementById('color' + capitalize(key));
         const text = document.getElementById('color' + capitalize(key) + 'Text');
-        if (picker && colors[key]) {
-            picker.value = colors[key];
-            if (text) text.value = colors[key];
+        if (picker) {
+            if (colors[key]) {
+                // User has an override - show it
+                picker.value = colors[key];
+                if (text) text.value = colors[key];
+            } else {
+                // No override - show theme default in picker but leave text empty
+                picker.value = themeDefaults[key] || '#000000';
+                if (text) text.value = '';
+            }
         }
     });
+}
+
+function getThemeColorMap(T) {
+    return {
+        accent: T.year || '#EB0A1E',
+        year: T.year || '#EB0A1E',
+        line: T.line || T.year || '#EB0A1E',
+        text: T.text || '#ffffff',
+        textSub: T.textSub || '#888888',
+        price: T.price || T.text || '#ffffff',
+        trim: T.trim || T.textSub || '#a1a1a1',
+        badgeBg: T.badge?.bg || T.year || '#EB0A1E',
+        badgeText: T.badge?.text || '#ffffff',
+        hlBg: T.hl?.bg || T.highlight?.bg || T.year || '#EB0A1E',
+        hlText: T.hl?.text || T.highlight?.text || '#ffffff',
+        payBg: T.payBox?.bg || T.year || '#EB0A1E',
+        payText: T.payBox?.text || '#ffffff',
+        payLabel: T.payLabel || T.payBox?.label || T.year || '#EB0A1E',
+        downText: T.textSub || '#888888',
+        discText: T.disc || T.textSub || '#888888',
+        bg1: T.bg?.[0] || '#0f0f0f',
+        bg2: T.bg?.[1] || '#1a1a1a',
+        card: T.card || '#1a1a1a'
+    };
 }
 
 function capitalize(s) {
@@ -314,11 +357,15 @@ function updateColors() {
                        'bg1', 'bg2', 'card'];
     
     colorKeys.forEach(key => {
-        const picker = document.getElementById('color' + capitalize(key));
         const text = document.getElementById('color' + capitalize(key) + 'Text');
-        if (picker) {
-            colors[key] = picker.value;
-            if (text) text.value = picker.value;
+        const picker = document.getElementById('color' + capitalize(key));
+        // Only save as override if text field has a value (user explicitly set it)
+        if (text && text.value && text.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+            colors[key] = text.value;
+            if (picker) picker.value = text.value;
+        } else if (text && !text.value) {
+            // Text cleared = revert to theme default
+            colors[key] = '';
         }
     });
     
@@ -326,27 +373,67 @@ function updateColors() {
     updatePreview();
 }
 
+function handleColorPicker(key) {
+    // Called when user interacts with a color picker directly
+    const picker = document.getElementById('color' + capitalize(key));
+    const text = document.getElementById('color' + capitalize(key) + 'Text');
+    if (picker && text) {
+        text.value = picker.value;
+        colors[key] = picker.value;
+    }
+    saveStorage();
+    updatePreview();
+}
+
 function syncColorFromText(pickerId) {
     const picker = document.getElementById(pickerId);
     const text = document.getElementById(pickerId + 'Text');
-    if (picker && text && text.value.match(/^#[0-9A-Fa-f]{6}$/)) {
-        picker.value = text.value;
-        updateColors();
+    if (picker && text) {
+        if (text.value === '') {
+            // Clearing the text = revert to theme default
+            const T = THEMES[slideTheme];
+            const defaults = getThemeColorMap(T);
+            const key = pickerId.replace('color', '');
+            const lowerKey = key.charAt(0).toLowerCase() + key.slice(1);
+            picker.value = defaults[lowerKey] || '#000000';
+            colors[lowerKey] = '';
+            saveStorage();
+            updatePreview();
+        } else if (text.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+            picker.value = text.value;
+            const key = pickerId.replace('color', '');
+            const lowerKey = key.charAt(0).toLowerCase() + key.slice(1);
+            colors[lowerKey] = text.value;
+            saveStorage();
+            updatePreview();
+        }
     }
+}
+
+function loadFromTheme(themeName) {
+    const T = THEMES[themeName];
+    if (!T) return;
+    const themeColors = getThemeColorMap(T);
+    
+    Object.keys(themeColors).forEach(key => {
+        colors[key] = themeColors[key];
+        const picker = document.getElementById('color' + capitalize(key));
+        const text = document.getElementById('color' + capitalize(key) + 'Text');
+        if (picker) picker.value = themeColors[key];
+        if (text) text.value = themeColors[key];
+    });
+    
+    saveStorage();
+    updatePreview();
+    toast('Loaded colors from ' + T.name);
 }
 
 function resetColors() {
     Object.keys(colors).forEach(key => colors[key] = '');
     loadColorsUI();
-    Object.keys(colors).forEach(key => {
-        const picker = document.getElementById('color' + capitalize(key));
-        const text = document.getElementById('color' + capitalize(key) + 'Text');
-        if (picker) picker.value = '#000000';
-        if (text) text.value = '';
-    });
     saveStorage();
     updatePreview();
-    toast('Colors reset');
+    toast('Colors reset to theme defaults');
 }
 
 // VIEW SWITCHING
@@ -362,6 +449,16 @@ function switchView(v) {
         }, 50);
     }
     if (v === 'colors') {
+        // Populate theme color loader dropdown
+        const loader = document.getElementById('themeColorLoader');
+        if (loader && loader.options.length <= 1) {
+            Object.entries(THEMES).forEach(([k, t]) => {
+                const opt = document.createElement('option');
+                opt.value = k;
+                opt.textContent = t.name;
+                loader.appendChild(opt);
+            });
+        }
         setTimeout(() => {
             loadLogo().then(updatePreview);
         }, 50);

@@ -162,51 +162,57 @@
             <div class="colors-layout">
                 <div class="colors-panel">
                     <h2 style="margin-bottom:16px;color:var(--text)">Global Color Overrides</h2>
-                    <p style="color:var(--text3);margin-bottom:20px;font-size:13px">Override theme colors. Leave text fields empty to use theme defaults.</p>
+                    <p style="color:var(--text3);margin-bottom:14px;font-size:13px">Override theme colors. Leave text fields empty to use theme defaults.</p>
+                    <div style="display:flex;gap:10px;margin-bottom:20px;align-items:center">
+                        <label style="font-size:13px;font-weight:500;white-space:nowrap;color:var(--text2)">Load from theme:</label>
+                        <select class="form-select" id="themeColorLoader" onchange="if(this.value){loadFromTheme(this.value);this.value=''}">
+                            <option value="">Select a theme...</option>
+                        </select>
+                        <button class="btn" onclick="resetColors()" style="white-space:nowrap">Clear All</button>
+                    </div>
                     <div class="color-grid">
                         <div class="color-card">
                             <h3>Accent Colors</h3>
-                            <div class="color-row"><label>Primary Accent</label><input type="color" id="colorAccent" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorAccentText" placeholder="#EB0A1E" oninput="syncColorFromText('colorAccent')"></div>
-                            <div class="color-row"><label>Year Text</label><input type="color" id="colorYear" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorYearText" placeholder="Theme default" oninput="syncColorFromText('colorYear')"></div>
-                            <div class="color-row"><label>Line/Border</label><input type="color" id="colorLine" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorLineText" placeholder="Theme default" oninput="syncColorFromText('colorLine')"></div>
+                            <div class="color-row"><label>Primary Accent</label><input type="color" id="colorAccent" oninput="handleColorPicker('accent')" value="#EB0A1E"><input type="text" class="form-input" id="colorAccentText" placeholder="#EB0A1E" oninput="syncColorFromText('colorAccent')"></div>
+                            <div class="color-row"><label>Year Text</label><input type="color" id="colorYear" oninput="handleColorPicker('year')" value="#EB0A1E"><input type="text" class="form-input" id="colorYearText" placeholder="Theme default" oninput="syncColorFromText('colorYear')"></div>
+                            <div class="color-row"><label>Line/Border</label><input type="color" id="colorLine" oninput="handleColorPicker('line')" value="#EB0A1E"><input type="text" class="form-input" id="colorLineText" placeholder="Theme default" oninput="syncColorFromText('colorLine')"></div>
                         </div>
                         <div class="color-card">
                             <h3>Text Colors</h3>
-                            <div class="color-row"><label>Main Text</label><input type="color" id="colorText" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorTextText" placeholder="Theme default" oninput="syncColorFromText('colorText')"></div>
-                            <div class="color-row"><label>Sub Text</label><input type="color" id="colorTextSub" value="#888888" oninput="updateColors()"><input type="text" class="form-input" id="colorTextSubText" placeholder="Theme default" oninput="syncColorFromText('colorTextSub')"></div>
-                            <div class="color-row"><label>Price</label><input type="color" id="colorPrice" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorPriceText" placeholder="Theme default" oninput="syncColorFromText('colorPrice')"></div>
-                            <div class="color-row"><label>Trim</label><input type="color" id="colorTrim" value="#a1a1a1" oninput="updateColors()"><input type="text" class="form-input" id="colorTrimText" placeholder="Theme default" oninput="syncColorFromText('colorTrim')"></div>
+                            <div class="color-row"><label>Main Text</label><input type="color" id="colorText" oninput="handleColorPicker('text')" value="#ffffff"><input type="text" class="form-input" id="colorTextText" placeholder="Theme default" oninput="syncColorFromText('colorText')"></div>
+                            <div class="color-row"><label>Sub Text</label><input type="color" id="colorTextSub" oninput="handleColorPicker('textSub')" value="#888888"><input type="text" class="form-input" id="colorTextSubText" placeholder="Theme default" oninput="syncColorFromText('colorTextSub')"></div>
+                            <div class="color-row"><label>Price</label><input type="color" id="colorPrice" oninput="handleColorPicker('price')" value="#ffffff"><input type="text" class="form-input" id="colorPriceText" placeholder="Theme default" oninput="syncColorFromText('colorPrice')"></div>
+                            <div class="color-row"><label>Trim</label><input type="color" id="colorTrim" oninput="handleColorPicker('trim')" value="#a1a1a1"><input type="text" class="form-input" id="colorTrimText" placeholder="Theme default" oninput="syncColorFromText('colorTrim')"></div>
                         </div>
                         <div class="color-card">
                             <h3>Badge</h3>
-                            <div class="color-row"><label>Background</label><input type="color" id="colorBadgeBg" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorBadgeBgText" placeholder="Theme default" oninput="syncColorFromText('colorBadgeBg')"></div>
-                            <div class="color-row"><label>Text</label><input type="color" id="colorBadgeText" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorBadgeTextText" placeholder="Theme default" oninput="syncColorFromText('colorBadgeText')"></div>
+                            <div class="color-row"><label>Background</label><input type="color" id="colorBadgeBg" oninput="handleColorPicker('badgeBg')" value="#EB0A1E"><input type="text" class="form-input" id="colorBadgeBgText" placeholder="Theme default" oninput="syncColorFromText('colorBadgeBg')"></div>
+                            <div class="color-row"><label>Text</label><input type="color" id="colorBadgeText" oninput="handleColorPicker('badgeText')" value="#ffffff"><input type="text" class="form-input" id="colorBadgeTextText" placeholder="Theme default" oninput="syncColorFromText('colorBadgeText')"></div>
                         </div>
                         <div class="color-card">
                             <h3>Highlight Box</h3>
-                            <div class="color-row"><label>Background</label><input type="color" id="colorHlBg" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorHlBgText" placeholder="Theme default" oninput="syncColorFromText('colorHlBg')"></div>
-                            <div class="color-row"><label>Text</label><input type="color" id="colorHlText" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorHlTextText" placeholder="Theme default" oninput="syncColorFromText('colorHlText')"></div>
-                            <div class="form-group" style="margin-top:10px"><label class="form-label">Corner Radius</label><div class="slider-row"><input type="range" id="hlRadius" min="0" max="30" value="8" oninput="saveTypo();updatePreview()"><span class="val" id="hlRadiusVal">8</span></div></div>
+                            <div class="color-row"><label>Background</label><input type="color" id="colorHlBg" oninput="handleColorPicker('hlBg')" value="#EB0A1E"><input type="text" class="form-input" id="colorHlBgText" placeholder="Theme default" oninput="syncColorFromText('colorHlBg')"></div>
+                            <div class="color-row"><label>Text</label><input type="color" id="colorHlText" oninput="handleColorPicker('hlText')" value="#ffffff"><input type="text" class="form-input" id="colorHlTextText" placeholder="Theme default" oninput="syncColorFromText('colorHlText')"></div>
+                            <div class="form-group" style="margin-top:10px"><label class="form-label">Corner Radius</label><div class="slider-row"><input type="range" id="hlRadius" min="0" max="30" value="10" oninput="saveTypo();updatePreview()"><span class="val" id="hlRadiusVal">8</span></div></div>
                         </div>
                         <div class="color-card">
                             <h3>Payment Box</h3>
-                            <div class="color-row"><label>Background</label><input type="color" id="colorPayBg" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorPayBgText" placeholder="Theme default" oninput="syncColorFromText('colorPayBg')"></div>
-                            <div class="color-row"><label>Text</label><input type="color" id="colorPayText" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorPayTextText" placeholder="Theme default" oninput="syncColorFromText('colorPayText')"></div>
-                            <div class="color-row"><label>Label</label><input type="color" id="colorPayLabel" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorPayLabelText" placeholder="Theme default" oninput="syncColorFromText('colorPayLabel')"></div>
+                            <div class="color-row"><label>Background</label><input type="color" id="colorPayBg" oninput="handleColorPicker('payBg')" value="#EB0A1E"><input type="text" class="form-input" id="colorPayBgText" placeholder="Theme default" oninput="syncColorFromText('colorPayBg')"></div>
+                            <div class="color-row"><label>Text</label><input type="color" id="colorPayText" oninput="handleColorPicker('payText')" value="#ffffff"><input type="text" class="form-input" id="colorPayTextText" placeholder="Theme default" oninput="syncColorFromText('colorPayText')"></div>
+                            <div class="color-row"><label>Label</label><input type="color" id="colorPayLabel" oninput="handleColorPicker('payLabel')" value="#EB0A1E"><input type="text" class="form-input" id="colorPayLabelText" placeholder="Theme default" oninput="syncColorFromText('colorPayLabel')"></div>
                         </div>
                         <div class="color-card">
                             <h3>Down & Disclaimer</h3>
-                            <div class="color-row"><label>Down Text</label><input type="color" id="colorDownText" value="#888888" oninput="updateColors()"><input type="text" class="form-input" id="colorDownTextText" placeholder="Theme default" oninput="syncColorFromText('colorDownText')"></div>
-                            <div class="color-row"><label>Disclaimer</label><input type="color" id="colorDiscText" value="#888888" oninput="updateColors()"><input type="text" class="form-input" id="colorDiscTextText" placeholder="Theme default" oninput="syncColorFromText('colorDiscText')"></div>
+                            <div class="color-row"><label>Down Text</label><input type="color" id="colorDownText" oninput="handleColorPicker('downText')" value="#888888"><input type="text" class="form-input" id="colorDownTextText" placeholder="Theme default" oninput="syncColorFromText('colorDownText')"></div>
+                            <div class="color-row"><label>Disclaimer</label><input type="color" id="colorDiscText" oninput="handleColorPicker('discText')" value="#888888"><input type="text" class="form-input" id="colorDiscTextText" placeholder="Theme default" oninput="syncColorFromText('colorDiscText')"></div>
                         </div>
                         <div class="color-card">
                             <h3>Background</h3>
-                            <div class="color-row"><label>Gradient Start</label><input type="color" id="colorBg1" value="#0f0f0f" oninput="updateColors()"><input type="text" class="form-input" id="colorBg1Text" placeholder="Theme default" oninput="syncColorFromText('colorBg1')"></div>
-                            <div class="color-row"><label>Gradient End</label><input type="color" id="colorBg2" value="#1a1a1a" oninput="updateColors()"><input type="text" class="form-input" id="colorBg2Text" placeholder="Theme default" oninput="syncColorFromText('colorBg2')"></div>
-                            <div class="color-row"><label>Card</label><input type="color" id="colorCard" value="#1a1a1a" oninput="updateColors()"><input type="text" class="form-input" id="colorCardText" placeholder="Theme default" oninput="syncColorFromText('colorCard')"></div>
+                            <div class="color-row"><label>Gradient Start</label><input type="color" id="colorBg1" oninput="handleColorPicker('bg1')" value="#0f0f0f"><input type="text" class="form-input" id="colorBg1Text" placeholder="Theme default" oninput="syncColorFromText('colorBg1')"></div>
+                            <div class="color-row"><label>Gradient End</label><input type="color" id="colorBg2" oninput="handleColorPicker('bg2')" value="#1a1a1a"><input type="text" class="form-input" id="colorBg2Text" placeholder="Theme default" oninput="syncColorFromText('colorBg2')"></div>
+                            <div class="color-row"><label>Card</label><input type="color" id="colorCard" oninput="handleColorPicker('card')" value="#1a1a1a"><input type="text" class="form-input" id="colorCardText" placeholder="Theme default" oninput="syncColorFromText('colorCard')"></div>
                         </div>
                     </div>
-                    <div style="margin-top:20px"><button class="btn" onclick="resetColors()">Reset to Theme Defaults</button></div>
                 </div>
                 <div class="colors-preview">
                     <div class="preview-label">Live Preview</div>
@@ -270,7 +276,7 @@
             <div class="typo-row">
                 <select class="form-select" id="badgeFont"></select>
                 <select class="form-select typo-weight" id="badgeWeight"></select>
-                <input type="number" class="form-input typo-size" id="badgeSize" value="22">
+                <input type="number" class="form-input typo-size" id="badgeSize" value="24">
             </div>
         </div>
         
@@ -281,7 +287,7 @@
                 <select class="form-select typo-weight" id="yearWeight"></select>
                 <input type="number" class="form-input typo-size" id="yearSize" value="30">
             </div>
-            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="yearGap" min="-20" max="40" value="5" oninput="saveTypo();updatePreview()"><span class="val" id="yearGapVal">5</span></div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="yearGap" min="-20" max="40" value="30" oninput="saveTypo();updatePreview()"><span class="val" id="yearGapVal">5</span></div>
         </div>
         
         <div class="typo-section">
@@ -291,7 +297,7 @@
                 <select class="form-select typo-weight" id="makeWeight"></select>
                 <input type="number" class="form-input typo-size" id="makeSize" value="66">
             </div>
-            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="makeGap" min="-30" max="30" value="-15" oninput="saveTypo();updatePreview()"><span class="val" id="makeGapVal">-15</span></div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="makeGap" min="-30" max="30" value="-10" oninput="saveTypo();updatePreview()"><span class="val" id="makeGapVal">-15</span></div>
         </div>
         
         <div class="typo-section">
@@ -299,7 +305,7 @@
             <div class="typo-row">
                 <select class="form-select" id="modelFont"></select>
                 <select class="form-select typo-weight" id="modelWeight"></select>
-                <input type="number" class="form-input typo-size" id="modelSize" value="66">
+                <input type="number" class="form-input typo-size" id="modelSize" value="60">
             </div>
             <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="modelGap" min="-30" max="30" value="-15" oninput="saveTypo();updatePreview()"><span class="val" id="modelGapVal">-15</span></div>
         </div>
@@ -309,9 +315,9 @@
             <div class="typo-row">
                 <select class="form-select" id="trimFont"></select>
                 <select class="form-select typo-weight" id="trimWeight"></select>
-                <input type="number" class="form-input typo-size" id="trimSize" value="26">
+                <input type="number" class="form-input typo-size" id="trimSize" value="30">
             </div>
-            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="trimGap" min="0" max="80" value="50" oninput="saveTypo();updatePreview()"><span class="val" id="trimGapVal">50</span></div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="trimGap" min="0" max="80" value="70" oninput="saveTypo();updatePreview()"><span class="val" id="trimGapVal">70</span></div>
         </div>
         
         <div class="typo-section">
@@ -321,7 +327,7 @@
                 <select class="form-select typo-weight" id="priceWeight"></select>
                 <input type="number" class="form-input typo-size" id="priceSize" value="70">
             </div>
-            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="priceGap" min="0" max="60" value="30" oninput="saveTypo();updatePreview()"><span class="val" id="priceGapVal">30</span></div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="priceGap" min="0" max="60" value="25" oninput="saveTypo();updatePreview()"><span class="val" id="priceGapVal">25</span></div>
         </div>
         
         <div class="typo-section">
@@ -329,9 +335,9 @@
             <div class="typo-row">
                 <select class="form-select" id="hlFont"></select>
                 <select class="form-select typo-weight" id="hlWeight"></select>
-                <input type="number" class="form-input typo-size" id="hlSize" value="44">
+                <input type="number" class="form-input typo-size" id="hlSize" value="40">
             </div>
-            <div class="slider-row"><span class="slider-label">Pad</span><input type="range" id="hlPad" min="8" max="40" value="14" oninput="saveTypo();updatePreview()"><span class="val" id="hlPadVal">14</span></div>
+            <div class="slider-row"><span class="slider-label">Pad</span><input type="range" id="hlPad" min="8" max="40" value="15" oninput="saveTypo();updatePreview()"><span class="val" id="hlPadVal">15</span></div>
         </div>
         
         <div class="typo-section">
@@ -341,7 +347,7 @@
                 <select class="form-select typo-weight" id="payWeight"></select>
                 <input type="number" class="form-input typo-size" id="paySize" value="60">
             </div>
-            <div class="slider-row"><span class="slider-label">Pad</span><input type="range" id="payPad" min="10" max="50" value="25" oninput="saveTypo();updatePreview()"><span class="val" id="payPadVal">25</span></div>
+            <div class="slider-row"><span class="slider-label">Pad</span><input type="range" id="payPad" min="10" max="50" value="15" oninput="saveTypo();updatePreview()"><span class="val" id="payPadVal">25</span></div>
         </div>
         
         <div class="typo-section">
@@ -349,7 +355,7 @@
             <div class="typo-row">
                 <select class="form-select" id="downFont"></select>
                 <select class="form-select typo-weight" id="downWeight"></select>
-                <input type="number" class="form-input typo-size" id="downSize" value="16">
+                <input type="number" class="form-input typo-size" id="downSize" value="18">
             </div>
         </div>
         
@@ -363,10 +369,10 @@
         </div>
         
         <div class="panel-title">Global Spacing <span class="badge">All Slides</span></div>
-        <div class="form-group"><label class="form-label">Canvas Margin</label><div class="slider-row"><input type="range" id="marginOuter" min="40" max="120" value="80" oninput="saveTypo();updatePreview()"><span class="val" id="marginOuterVal">80</span></div></div>
-        <div class="form-group"><label class="form-label">Card Padding</label><div class="slider-row"><input type="range" id="cardPad" min="12" max="48" value="24" oninput="saveTypo();updatePreview()"><span class="val" id="cardPadVal">24</span></div></div>
-        <div class="form-group"><label class="form-label">Info Left Offset</label><div class="slider-row"><input type="range" id="infoOffset" min="20" max="80" value="50" oninput="saveTypo();updatePreview()"><span class="val" id="infoOffsetVal">50</span></div></div>
-        <div class="form-group"><label class="form-label">Header Top</label><div class="slider-row"><input type="range" id="headerTop" min="30" max="100" value="50" oninput="saveTypo();updatePreview()"><span class="val" id="headerTopVal">50</span></div></div>
+        <div class="form-group"><label class="form-label">Canvas Margin</label><div class="slider-row"><input type="range" id="marginOuter" min="40" max="120" value="75" oninput="saveTypo();updatePreview()"><span class="val" id="marginOuterVal">80</span></div></div>
+        <div class="form-group"><label class="form-label">Card Padding</label><div class="slider-row"><input type="range" id="cardPad" min="12" max="48" value="20" oninput="saveTypo();updatePreview()"><span class="val" id="cardPadVal">24</span></div></div>
+        <div class="form-group"><label class="form-label">Info Left Offset</label><div class="slider-row"><input type="range" id="infoOffset" min="20" max="80" value="55" oninput="saveTypo();updatePreview()"><span class="val" id="infoOffsetVal">50</span></div></div>
+        <div class="form-group"><label class="form-label">Header Top</label><div class="slider-row"><input type="range" id="headerTop" min="30" max="100" value="65" oninput="saveTypo();updatePreview()"><span class="val" id="headerTopVal">50</span></div></div>
     </aside>
 </div>
 
