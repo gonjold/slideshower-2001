@@ -1565,13 +1565,14 @@ async function generateVideo() {
     if (!vehicles.length) return toast('Add vehicles');
     
     showModal('progressModal');
-    document.getElementById('progressTitle').textContent = 'Generating...';
+    document.getElementById('progressTitle').textContent = 'Generating Video...';
     document.getElementById('progressText').textContent = 'Loading images...';
     document.getElementById('progressBar').style.width = '5%';
     
+    // Pre-load all images
     for (let i = 0; i < vehicles.length; i++) {
         await loadImg(vehicles[i]);
-        document.getElementById('progressBar').style.width = (5 + (i / vehicles.length) * 35) + '%';
+        document.getElementById('progressBar').style.width = (5 + (i / vehicles.length) * 25) + '%';
     }
     
     const res = (document.getElementById('videoRes')?.value || '1920x1080').split('x');
@@ -1585,9 +1586,23 @@ async function generateVideo() {
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d');
+    
+    // Pre-render all slides to offscreen canvases for instant access during transitions
+    document.getElementById('progressText').textContent = 'Pre-rendering slides...';
+    const slideCanvases = [];
+    for (let i = 0; i < vehicles.length; i++) {
+        const sc = document.createElement('canvas');
+        sc.width = W;
+        sc.height = H;
+        const sctx = sc.getContext('2d');
+        drawSlide(sctx, vehicles[i], W, H, 1, i);
+        slideCanvases.push(sc);
+        document.getElementById('progressBar').style.width = (30 + (i / vehicles.length) * 15) + '%';
+    }
+    
+    // Setup recording
     const stream = canvas.captureStream(fps);
     const chunks = [];
-    
     const rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 });
     rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
     rec.onstop = () => {
@@ -1597,54 +1612,108 @@ async function generateVideo() {
         a.click();
         document.getElementById('progressBar').style.width = '100%';
         document.getElementById('progressText').textContent = 'Done!';
-        setTimeout(() => { closeModal('progressModal'); toast('Downloaded'); }, 1000);
+        setTimeout(() => { closeModal('progressModal'); toast('Video downloaded!'); }, 1000);
     };
     
     rec.start(100);
     document.getElementById('recording').classList.add('active');
     
-    const fPS = Math.floor(slideDur * fps);
-    const fPT = Math.floor(transDur * fps);
-    const total = vehicles.length * (fPS + fPT);
-    let frame = 0;
+    const totalSlides = vehicles.length;
     
-    for (let i = 0; i < vehicles.length; i++) {
-        const curr = vehicles[i];
-        const next = vehicles[(i + 1) % vehicles.length];
+    for (let i = 0; i < totalSlides; i++) {
+        // --- STATIC HOLD ---
+        // Draw slide once, then just wait. captureStream keeps capturing the static frame.
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(slideCanvases[i], 0, 0);
         
-        for (let f = 0; f < fPS; f++) {
-            drawSlide(ctx, curr, W, H, 1, i);
-            await new Promise(r => setTimeout(r, 1000 / fps));
-            frame++;
-            if (f % 5 === 0) {
-                document.getElementById('progressBar').style.width = (40 + frame / total * 55) + '%';
-                document.getElementById('progressText').textContent = 'Slide ' + (i + 1) + '/' + vehicles.length;
-            }
-        }
+        document.getElementById('progressText').textContent = `Slide ${i + 1}/${totalSlides} — holding ${slideDur}s`;
+        document.getElementById('progressBar').style.width = (45 + (i / totalSlides) * 50) + '%';
         
-        for (let f = 0; f < fPT; f++) {
-            const t = f / fPT;
-            ctx.clearRect(0, 0, W, H);
-            if (transType === 'slideLeft') {
-                ctx.save();
-                ctx.translate(-W * t, 0);
-                drawSlide(ctx, curr, W, H, 1, i);
-                ctx.translate(W, 0);
-                drawSlide(ctx, next, W, H, 1, i + 1);
-                ctx.restore();
-            } else if (transType === 'fade') {
-                drawSlide(ctx, curr, W, H, 1 - t, i);
-                drawSlide(ctx, next, W, H, t, i + 1);
-            } else {
-                drawSlide(ctx, next, W, H, 1, i + 1);
-            }
-            await new Promise(r => setTimeout(r, 1000 / fps));
-            frame++;
+        await sleep(slideDur * 1000);
+        
+        // --- TRANSITION ---
+        if (i < totalSlides - 1 || totalSlides > 1) {
+            const nextIdx = (i + 1) % totalSlides;
+            const currCanvas = slideCanvases[i];
+            const nextCanvas = slideCanvases[nextIdx];
+            
+            document.getElementById('progressText').textContent = `Slide ${i + 1}/${totalSlides} — transition`;
+            
+            // Animate transition in real-time using requestAnimationFrame for smooth frames
+            await animateTransition(ctx, currCanvas, nextCanvas, W, H, transDur, transType);
         }
     }
     
     document.getElementById('recording').classList.remove('active');
     rec.stop();
+}
+
+function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+}
+
+function animateTransition(ctx, currCanvas, nextCanvas, W, H, duration, type) {
+    return new Promise(resolve => {
+        const startTime = performance.now();
+        const durationMs = duration * 1000;
+        
+        function frame(now) {
+            const elapsed = now - startTime;
+            const t = Math.min(elapsed / durationMs, 1);
+            
+            ctx.clearRect(0, 0, W, H);
+            
+            if (type === 'slideLeft') {
+                const offset = W * easeInOut(t);
+                ctx.drawImage(currCanvas, -offset, 0);
+                ctx.drawImage(nextCanvas, W - offset, 0);
+            } else if (type === 'slideRight') {
+                const offset = W * easeInOut(t);
+                ctx.drawImage(currCanvas, offset, 0);
+                ctx.drawImage(nextCanvas, -W + offset, 0);
+            } else if (type === 'slideUp') {
+                const offset = H * easeInOut(t);
+                ctx.drawImage(currCanvas, 0, -offset);
+                ctx.drawImage(nextCanvas, 0, H - offset);
+            } else if (type === 'fade') {
+                ctx.globalAlpha = 1 - t;
+                ctx.drawImage(currCanvas, 0, 0);
+                ctx.globalAlpha = t;
+                ctx.drawImage(nextCanvas, 0, 0);
+                ctx.globalAlpha = 1;
+            } else if (type === 'zoom') {
+                const scale = 1 + t * 0.3;
+                const alpha = 1 - t;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(W / 2, H / 2);
+                ctx.scale(scale, scale);
+                ctx.drawImage(currCanvas, -W / 2, -H / 2);
+                ctx.restore();
+                ctx.globalAlpha = t;
+                ctx.drawImage(nextCanvas, 0, 0);
+                ctx.globalAlpha = 1;
+            } else {
+                // Cut
+                ctx.drawImage(t < 0.5 ? currCanvas : nextCanvas, 0, 0);
+            }
+            
+            if (t < 1) {
+                requestAnimationFrame(frame);
+            } else {
+                // Ensure final frame is the next slide clean
+                ctx.clearRect(0, 0, W, H);
+                ctx.drawImage(nextCanvas, 0, 0);
+                resolve();
+            }
+        }
+        
+        requestAnimationFrame(frame);
+    });
+}
+
+function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 }
 
 function downloadSlide() {
