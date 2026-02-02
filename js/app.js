@@ -1,6 +1,7 @@
-// app.js - Slideshower 2001 Application Logic
+// app.js - Slideshower 2001 v2
 
 // State
+let currentUser = null;
 let slideTheme = 'dark';
 let logoIdx = 4;
 let logoImg = null;
@@ -8,140 +9,330 @@ let zoom = 0.5;
 let vehicles = [];
 let currentIdx = 0;
 let feedVehicles = [];
+let feedUploadDate = null;
 let selectedIds = new Set();
 let feedSort = { col: 'days', dir: 'asc' };
 
 let visibility = {
-    showBadge: true,
-    showStock: true,
-    showYear: true,
-    showTrim: true,
-    showPriceLabel: true,
-    showHighlight: true,
-    showPayment: true,
-    showDown: false,
-    showDisclaimer: true
+    showBadge: true, showStock: true, showYear: true, showTrim: true,
+    showPriceLabel: true, showHighlight: true, showPayment: true,
+    showDown: false, showDisclaimer: true
 };
 
 let typo = {
-    yearFont: 'Barlow Condensed', yearSize: 30, yearGap: 5,
-    makeFont: 'Bebas Neue', makeSize: 66, makeGap: -15,
-    modelFont: 'Bebas Neue', modelSize: 66, modelGap: -15,
-    trimFont: 'DM Sans', trimSize: 26, trimGap: 50,
-    priceFont: 'Bebas Neue', priceSize: 70, priceGap: 30,
-    hlFont: 'Barlow Condensed', hlSize: 44, hlPad: 14,
-    payFont: 'Bebas Neue', paySize: 60, payPad: 25,
+    yearFont: 'Barlow Condensed', yearWeight: 700, yearSize: 30, yearGap: 5,
+    makeFont: 'Bebas Neue', makeWeight: 400, makeSize: 66, makeGap: -15,
+    modelFont: 'Bebas Neue', modelWeight: 400, modelSize: 66, modelGap: -15,
+    trimFont: 'DM Sans', trimWeight: 600, trimSize: 26, trimGap: 50,
+    priceFont: 'Bebas Neue', priceWeight: 400, priceSize: 70, priceGap: 30,
+    hlFont: 'Barlow Condensed', hlWeight: 700, hlSize: 44, hlPad: 14, hlRadius: 8,
+    payFont: 'Bebas Neue', payWeight: 400, paySize: 60, payPad: 25,
     marginOuter: 80, cardPad: 24, infoOffset: 50, headerTop: 50
 };
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
+// Global color overrides (empty = use theme defaults)
+let colors = {
+    accent: '', year: '', line: '', text: '', textSub: '', price: '', trim: '',
+    badgeBg: '', badgeText: '', hlBg: '', hlText: '',
+    payBg: '', payText: '', payLabel: '',
+    bg1: '', bg2: '', card: ''
+};
+
+// AUTH FUNCTIONS
+function showLoginTab(tab) {
+    document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.login-tab[onclick*="${tab}"]`).classList.add('active');
+    document.getElementById('signinForm').style.display = tab === 'signin' ? 'flex' : 'none';
+    document.getElementById('signupForm').style.display = tab === 'signup' ? 'flex' : 'none';
+}
+
+async function handleSignIn(e) {
+    e.preventDefault();
+    const email = document.getElementById('signinEmail').value;
+    const password = document.getElementById('signinPassword').value;
+    const errorEl = document.getElementById('signinError');
+    errorEl.textContent = '';
+    
+    try {
+        await window.authHelpers.signInWithEmailAndPassword(window.auth, email, password);
+    } catch (err) {
+        errorEl.textContent = err.message.replace('Firebase: ', '');
+    }
+}
+
+async function handleSignUp(e) {
+    e.preventDefault();
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const confirm = document.getElementById('signupConfirm').value;
+    const errorEl = document.getElementById('signupError');
+    errorEl.textContent = '';
+    
+    if (password !== confirm) {
+        errorEl.textContent = 'Passwords do not match';
+        return;
+    }
+    
+    try {
+        await window.authHelpers.createUserWithEmailAndPassword(window.auth, email, password);
+    } catch (err) {
+        errorEl.textContent = err.message.replace('Firebase: ', '');
+    }
+}
+
+async function handleSignOut() {
+    await window.authHelpers.signOut(window.auth);
+}
+
+// Called when user logs in
+window.onUserLogin = async function(user) {
+    currentUser = user;
     loadStorage();
     loadTypoUI();
+    loadColorsUI();
     renderThemes();
     renderLogos();
+    await loadFeedFromFirebase();
     renderFeed();
     renderInv();
     updatePanel();
-    
-    document.addEventListener('keydown', e => {
-        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
-        if (e.key === 'Escape') closeAllModals();
-        if (e.key === 'ArrowLeft') prevVehicle();
-        if (e.key === 'ArrowRight') nextVehicle();
-    });
-    
-    // Load Firebase layouts
     setTimeout(loadLayouts, 500);
-});
+};
 
-// Typography UI
+// FIREBASE FEED STORAGE
+async function saveFeedToFirebase() {
+    if (!currentUser || !window.firebaseReady) return;
+    
+    try {
+        document.getElementById('syncStatus').textContent = 'Saving...';
+        await window.fbHelpers.setDoc(
+            window.fbHelpers.doc(window.db, 'users', currentUser.uid, 'data', 'feed'),
+            { 
+                vehicles: feedVehicles,
+                uploadDate: feedUploadDate,
+                updatedAt: new Date().toISOString()
+            }
+        );
+        document.getElementById('syncStatus').textContent = 'Synced';
+    } catch (e) {
+        console.error('Save feed error:', e);
+        document.getElementById('syncStatus').textContent = 'Sync error';
+    }
+}
+
+async function loadFeedFromFirebase() {
+    if (!currentUser || !window.firebaseReady) return;
+    
+    try {
+        const snap = await window.fbHelpers.getDoc(
+            window.fbHelpers.doc(window.db, 'users', currentUser.uid, 'data', 'feed')
+        );
+        if (snap.exists()) {
+            const data = snap.data();
+            feedVehicles = data.vehicles || [];
+            feedUploadDate = data.uploadDate || null;
+            hydrateDropdowns();
+            updateFeedInfo();
+        }
+    } catch (e) {
+        console.error('Load feed error:', e);
+    }
+}
+
+function updateFeedInfo() {
+    const el = document.getElementById('feedInfo');
+    if (feedUploadDate) {
+        const d = new Date(feedUploadDate);
+        el.innerHTML = `<strong>${feedVehicles.length}</strong> vehicles | Uploaded ${d.toLocaleDateString()} ${d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+    } else {
+        el.textContent = feedVehicles.length ? `${feedVehicles.length} vehicles` : 'No feed loaded';
+    }
+}
+
+// TYPOGRAPHY UI
 function loadTypoUI() {
-    const fonts = FONTS.display;
+    // Populate font dropdowns
+    const displayFonts = FONTS.display;
     const bodyFonts = FONTS.body;
     
-    // Populate font dropdowns with Toyota Type included
-    ['yearFont', 'makeFont', 'modelFont', 'priceFont', 'hlFont', 'payFont'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = fonts.map(f => `<option value="${f}">${f}</option>`).join('');
+    ['year', 'make', 'model', 'price', 'hl', 'pay'].forEach(id => {
+        const fontEl = document.getElementById(id + 'Font');
+        if (fontEl) {
+            fontEl.innerHTML = displayFonts.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+            fontEl.value = typo[id + 'Font'];
+            fontEl.onchange = () => { updateWeightOptions(id); saveTypo(); updatePreview(); };
         }
+        updateWeightOptions(id);
     });
     
-    ['trimFont'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.innerHTML = bodyFonts.map(f => `<option value="${f}">${f}</option>`).join('');
+    ['trim'].forEach(id => {
+        const fontEl = document.getElementById(id + 'Font');
+        if (fontEl) {
+            fontEl.innerHTML = bodyFonts.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+            fontEl.value = typo[id + 'Font'];
+            fontEl.onchange = () => { updateWeightOptions(id); saveTypo(); updatePreview(); };
         }
+        updateWeightOptions(id);
     });
     
-    // Set values
-    document.getElementById('yearFont').value = typo.yearFont;
-    document.getElementById('yearSize').value = typo.yearSize;
+    // Set sizes
+    ['year', 'make', 'model', 'trim', 'price', 'hl', 'pay'].forEach(id => {
+        const sizeEl = document.getElementById(id + 'Size');
+        if (sizeEl) sizeEl.value = typo[id + 'Size'];
+    });
+    
+    // Set gaps/pads as sliders
     document.getElementById('yearGap').value = typo.yearGap;
-    document.getElementById('makeFont').value = typo.makeFont;
-    document.getElementById('makeSize').value = typo.makeSize;
     document.getElementById('makeGap').value = typo.makeGap;
-    document.getElementById('modelFont').value = typo.modelFont;
-    document.getElementById('modelSize').value = typo.modelSize;
     document.getElementById('modelGap').value = typo.modelGap;
-    document.getElementById('trimFont').value = typo.trimFont;
-    document.getElementById('trimSize').value = typo.trimSize;
     document.getElementById('trimGap').value = typo.trimGap;
-    document.getElementById('priceFont').value = typo.priceFont;
-    document.getElementById('priceSize').value = typo.priceSize;
     document.getElementById('priceGap').value = typo.priceGap;
-    document.getElementById('hlFont').value = typo.hlFont;
-    document.getElementById('hlSize').value = typo.hlSize;
     document.getElementById('hlPad').value = typo.hlPad;
-    document.getElementById('payFont').value = typo.payFont;
-    document.getElementById('paySize').value = typo.paySize;
     document.getElementById('payPad').value = typo.payPad;
     document.getElementById('marginOuter').value = typo.marginOuter;
     document.getElementById('cardPad').value = typo.cardPad;
     document.getElementById('infoOffset').value = typo.infoOffset;
     document.getElementById('headerTop').value = typo.headerTop;
+    if (document.getElementById('hlRadius')) document.getElementById('hlRadius').value = typo.hlRadius || 8;
+    
     updateSliderVals();
 }
 
+function updateWeightOptions(id) {
+    const fontName = document.getElementById(id + 'Font')?.value;
+    const weightEl = document.getElementById(id + 'Weight');
+    if (!fontName || !weightEl) return;
+    
+    const allFonts = [...FONTS.display, ...FONTS.body];
+    const font = allFonts.find(f => f.name === fontName);
+    const weights = font?.weights || [400];
+    
+    weightEl.innerHTML = weights.map(w => `<option value="${w}">${WEIGHT_LABELS[w] || w}</option>`).join('');
+    
+    // Set current value or default
+    const currentWeight = typo[id + 'Weight'];
+    if (weights.includes(currentWeight)) {
+        weightEl.value = currentWeight;
+    } else {
+        weightEl.value = weights[0];
+        typo[id + 'Weight'] = weights[0];
+    }
+}
+
 function saveTypo() {
-    typo.yearFont = document.getElementById('yearFont').value;
-    typo.yearSize = +document.getElementById('yearSize').value;
-    typo.yearGap = +document.getElementById('yearGap').value;
-    typo.makeFont = document.getElementById('makeFont').value;
-    typo.makeSize = +document.getElementById('makeSize').value;
-    typo.makeGap = +document.getElementById('makeGap').value;
-    typo.modelFont = document.getElementById('modelFont').value;
-    typo.modelSize = +document.getElementById('modelSize').value;
-    typo.modelGap = +document.getElementById('modelGap').value;
-    typo.trimFont = document.getElementById('trimFont').value;
-    typo.trimSize = +document.getElementById('trimSize').value;
-    typo.trimGap = +document.getElementById('trimGap').value;
-    typo.priceFont = document.getElementById('priceFont').value;
-    typo.priceSize = +document.getElementById('priceSize').value;
-    typo.priceGap = +document.getElementById('priceGap').value;
-    typo.hlFont = document.getElementById('hlFont').value;
-    typo.hlSize = +document.getElementById('hlSize').value;
-    typo.hlPad = +document.getElementById('hlPad').value;
-    typo.payFont = document.getElementById('payFont').value;
-    typo.paySize = +document.getElementById('paySize').value;
-    typo.payPad = +document.getElementById('payPad').value;
-    typo.marginOuter = +document.getElementById('marginOuter').value;
-    typo.cardPad = +document.getElementById('cardPad').value;
-    typo.infoOffset = +document.getElementById('infoOffset').value;
-    typo.headerTop = +document.getElementById('headerTop').value;
+    typo.yearFont = document.getElementById('yearFont')?.value || typo.yearFont;
+    typo.yearWeight = +document.getElementById('yearWeight')?.value || 700;
+    typo.yearSize = +document.getElementById('yearSize')?.value || 30;
+    typo.yearGap = +document.getElementById('yearGap')?.value || 5;
+    
+    typo.makeFont = document.getElementById('makeFont')?.value || typo.makeFont;
+    typo.makeWeight = +document.getElementById('makeWeight')?.value || 400;
+    typo.makeSize = +document.getElementById('makeSize')?.value || 66;
+    typo.makeGap = +document.getElementById('makeGap')?.value || -15;
+    
+    typo.modelFont = document.getElementById('modelFont')?.value || typo.modelFont;
+    typo.modelWeight = +document.getElementById('modelWeight')?.value || 400;
+    typo.modelSize = +document.getElementById('modelSize')?.value || 66;
+    typo.modelGap = +document.getElementById('modelGap')?.value || -15;
+    
+    typo.trimFont = document.getElementById('trimFont')?.value || typo.trimFont;
+    typo.trimWeight = +document.getElementById('trimWeight')?.value || 600;
+    typo.trimSize = +document.getElementById('trimSize')?.value || 26;
+    typo.trimGap = +document.getElementById('trimGap')?.value || 50;
+    
+    typo.priceFont = document.getElementById('priceFont')?.value || typo.priceFont;
+    typo.priceWeight = +document.getElementById('priceWeight')?.value || 400;
+    typo.priceSize = +document.getElementById('priceSize')?.value || 70;
+    typo.priceGap = +document.getElementById('priceGap')?.value || 30;
+    
+    typo.hlFont = document.getElementById('hlFont')?.value || typo.hlFont;
+    typo.hlWeight = +document.getElementById('hlWeight')?.value || 700;
+    typo.hlSize = +document.getElementById('hlSize')?.value || 44;
+    typo.hlPad = +document.getElementById('hlPad')?.value || 14;
+    typo.hlRadius = +document.getElementById('hlRadius')?.value || 8;
+    
+    typo.payFont = document.getElementById('payFont')?.value || typo.payFont;
+    typo.payWeight = +document.getElementById('payWeight')?.value || 400;
+    typo.paySize = +document.getElementById('paySize')?.value || 60;
+    typo.payPad = +document.getElementById('payPad')?.value || 25;
+    
+    typo.marginOuter = +document.getElementById('marginOuter')?.value || 80;
+    typo.cardPad = +document.getElementById('cardPad')?.value || 24;
+    typo.infoOffset = +document.getElementById('infoOffset')?.value || 50;
+    typo.headerTop = +document.getElementById('headerTop')?.value || 50;
+    
     updateSliderVals();
     saveStorage();
 }
 
 function updateSliderVals() {
-    document.getElementById('marginOuterVal').textContent = typo.marginOuter;
-    document.getElementById('cardPadVal').textContent = typo.cardPad;
-    document.getElementById('infoOffsetVal').textContent = typo.infoOffset;
-    document.getElementById('headerTopVal').textContent = typo.headerTop;
+    const setVal = (id) => {
+        const el = document.getElementById(id + 'Val');
+        const input = document.getElementById(id);
+        if (el && input) el.textContent = input.value;
+    };
+    ['yearGap', 'makeGap', 'modelGap', 'trimGap', 'priceGap', 'hlPad', 'payPad', 
+     'marginOuter', 'cardPad', 'infoOffset', 'headerTop', 'hlRadius'].forEach(setVal);
 }
 
-// View Switching
+// COLORS UI
+function loadColorsUI() {
+    Object.keys(colors).forEach(key => {
+        const picker = document.getElementById('color' + capitalize(key));
+        const text = document.getElementById('color' + capitalize(key) + 'Text');
+        if (picker && colors[key]) {
+            picker.value = colors[key];
+            if (text) text.value = colors[key];
+        }
+    });
+}
+
+function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function updateColors() {
+    const colorKeys = ['accent', 'year', 'line', 'text', 'textSub', 'price', 'trim',
+                       'badgeBg', 'badgeText', 'hlBg', 'hlText', 
+                       'payBg', 'payText', 'payLabel', 'bg1', 'bg2', 'card'];
+    
+    colorKeys.forEach(key => {
+        const picker = document.getElementById('color' + capitalize(key));
+        const text = document.getElementById('color' + capitalize(key) + 'Text');
+        if (picker) {
+            colors[key] = picker.value;
+            if (text) text.value = picker.value;
+        }
+    });
+    
+    saveStorage();
+    updatePreview();
+}
+
+function syncColorFromText(pickerId) {
+    const picker = document.getElementById(pickerId);
+    const text = document.getElementById(pickerId + 'Text');
+    if (picker && text && text.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+        picker.value = text.value;
+        updateColors();
+    }
+}
+
+function resetColors() {
+    Object.keys(colors).forEach(key => colors[key] = '');
+    loadColorsUI();
+    Object.keys(colors).forEach(key => {
+        const picker = document.getElementById('color' + capitalize(key));
+        const text = document.getElementById('color' + capitalize(key) + 'Text');
+        if (picker) picker.value = '#000000';
+        if (text) text.value = '';
+    });
+    saveStorage();
+    updatePreview();
+    toast('Colors reset');
+}
+
+// VIEW SWITCHING
 function switchView(v) {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === v));
     document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
@@ -156,7 +347,7 @@ function switchView(v) {
     if (v === 'inventory') renderInv();
 }
 
-// Themes
+// THEMES
 function renderThemes() {
     document.getElementById('themeGrid').innerHTML = Object.entries(THEMES).map(([k, t]) =>
         `<div class="theme-card ${k === slideTheme ? 'selected' : ''}" onclick="selectTheme('${k}')">
@@ -173,7 +364,7 @@ function selectTheme(t) {
     updatePreview();
 }
 
-// Logos
+// LOGOS
 function renderLogos() {
     document.getElementById('logoGrid').innerHTML = LOGOS.map((l, i) =>
         `<div class="logo-option ${i === logoIdx ? 'selected' : ''} ${l.dark ? 'dark-bg' : ''}" onclick="selectLogo(${i})">
@@ -201,7 +392,7 @@ async function loadLogo() {
     });
 }
 
-// Canvas - FIXED viewport calculation using transform scale
+// CANVAS
 function initCanvas() {
     const container = document.getElementById('canvasArea');
     const wrap = document.getElementById('canvasWrap');
@@ -209,22 +400,18 @@ function initCanvas() {
     if (!container || !wrap || !canvas) return;
     
     const rect = container.getBoundingClientRect();
-    const availW = rect.width - 40; // padding
+    const availW = rect.width - 40;
     const availH = rect.height - 40;
     
-    // Calculate zoom to fit while maintaining 16:9 aspect ratio
     const scaleW = availW / 1920;
     const scaleH = availH / 1080;
     zoom = Math.min(scaleW, scaleH, 1);
-    zoom = Math.max(0.25, zoom); // minimum zoom
+    zoom = Math.max(0.25, zoom);
     
-    // Set wrapper size to scaled dimensions
     const displayW = Math.floor(1920 * zoom);
     const displayH = Math.floor(1080 * zoom);
     wrap.style.width = displayW + 'px';
     wrap.style.height = displayH + 'px';
-    
-    // Canvas stays at full resolution but CSS scales it
     canvas.style.width = '100%';
     canvas.style.height = '100%';
     
@@ -237,22 +424,19 @@ function zoomFit() { initCanvas(); }
 
 function updateZoom() {
     const wrap = document.getElementById('canvasWrap');
-    const canvas = document.getElementById('mainCanvas');
-    const displayW = Math.floor(1920 * zoom);
-    const displayH = Math.floor(1080 * zoom);
-    wrap.style.width = displayW + 'px';
-    wrap.style.height = displayH + 'px';
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
+    wrap.style.width = Math.floor(1920 * zoom) + 'px';
+    wrap.style.height = Math.floor(1080 * zoom) + 'px';
     document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
 }
 
-// Preview
+// PREVIEW
 let updateTO;
 function updatePreview() {
     clearTimeout(updateTO);
     updateTO = setTimeout(() => {
-        const ctx = document.getElementById('mainCanvas').getContext('2d');
+        const canvas = document.getElementById('mainCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
         const v = vehicles[currentIdx] || {
             year: '2025', make: 'Toyota', model: 'Camry', trim: 'XSE',
             stock: 'T12345', price: 34999, payment: 499, down: 3999,
@@ -273,7 +457,6 @@ async function loadImg(v) {
     });
 }
 
-// Rounded rectangle helper
 function rr(ctx, x, y, w, h, r) {
     ctx.beginPath();
     ctx.moveTo(x + r, y);
@@ -288,7 +471,12 @@ function rr(ctx, x, y, w, h, r) {
     ctx.closePath();
 }
 
-// Draw Slide
+// Get color with override support
+function getColor(themeColor, overrideKey) {
+    return colors[overrideKey] || themeColor;
+}
+
+// DRAW SLIDE
 function drawSlide(ctx, v, W, H, opacity, idx) {
     const T = THEMES[slideTheme];
     const TY = typo;
@@ -308,16 +496,16 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
     };
     
     const M = TY.marginOuter;
-    const accent = v.overrideAccentColor || null;
+    const accent = v.overrideAccentColor || getColor(T.hl.bg, 'accent');
     const badgeTxt = v.overrideBadge || S.badge;
     const hlTxt = v.overrideHighlight || S.highlight;
     const showPay = visibility.showPayment && !v.hidePayment && v.payment > 0;
     
-    const badgeBg = accent || T.badge.bg;
-    const hlBg = accent || T.hl.bg;
-    const payBg = accent || T.payBox.bg;
-    const yearC = accent || T.year;
-    const lineC = accent || T.line;
+    const badgeBg = v.overrideAccentColor || getColor(T.badge.bg, 'badgeBg');
+    const hlBg = v.overrideAccentColor || getColor(T.hl.bg, 'hlBg');
+    const payBg = v.overrideAccentColor || getColor(T.payBox.bg, 'payBg');
+    const yearC = v.overrideAccentColor || getColor(T.year, 'year');
+    const lineC = v.overrideAccentColor || getColor(T.line, 'line');
     
     let imgR = S.imgPos === 'right';
     if (S.imgPos === 'alternate') imgR = idx % 2 === 1;
@@ -327,8 +515,8 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
     
     // Background gradient
     const bg = ctx.createLinearGradient(0, 0, W, H);
-    bg.addColorStop(0, T.bg[0]);
-    bg.addColorStop(1, T.bg[1]);
+    bg.addColorStop(0, getColor(T.bg[0], 'bg1'));
+    bg.addColorStop(1, getColor(T.bg[1], 'bg2'));
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
     
@@ -358,7 +546,7 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
         ctx.fillStyle = badgeBg;
         rr(ctx, bX, bY, bW, bH, 4);
         ctx.fill();
-        ctx.fillStyle = T.badge.text;
+        ctx.fillStyle = getColor(T.badge.text, 'badgeText');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(badgeTxt, bX + bW / 2, bY + bH / 2);
@@ -378,12 +566,12 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
         ctx.fill();
     }
     
-    ctx.fillStyle = T.card;
+    ctx.fillStyle = getColor(T.card, 'card');
     rr(ctx, cX, cY, cW, cH, 16);
     ctx.fill();
     
     if (S.cardStyle === 'border') {
-        ctx.strokeStyle = accent || T.line;
+        ctx.strokeStyle = lineC;
         ctx.lineWidth = 3;
         rr(ctx, cX, cY, cW, cH, 16);
         ctx.stroke();
@@ -434,7 +622,7 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
         ctx.fillStyle = 'rgba(128,128,128,0.15)';
         rr(ctx, infoX + infoW - sW, Y, sW, sH, sH / 2);
         ctx.fill();
-        ctx.fillStyle = T.textSub;
+        ctx.fillStyle = getColor(T.textSub, 'textSub');
         ctx.textBaseline = 'middle';
         ctx.fillText(sTxt, infoX + infoW - sW + 10, Y + sH / 2);
         ctx.textBaseline = 'alphabetic';
@@ -443,7 +631,7 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
     
     // Year
     if (visibility.showYear) {
-        ctx.font = `700 ${TY.yearSize}px "${TY.yearFont}", sans-serif`;
+        ctx.font = `${TY.yearWeight} ${TY.yearSize}px "${TY.yearFont}", sans-serif`;
         ctx.fillStyle = yearC;
         ctx.fillText(v.year, infoX, Y);
         Y += TY.yearSize + TY.yearGap;
@@ -451,29 +639,29 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
     
     // Make
     let fs = TY.makeSize;
-    ctx.font = `400 ${fs}px "${TY.makeFont}", sans-serif`;
+    ctx.font = `${TY.makeWeight} ${fs}px "${TY.makeFont}", sans-serif`;
     while (ctx.measureText(v.make.toUpperCase()).width > infoW - 20 && fs > 30) {
         fs -= 2;
-        ctx.font = `400 ${fs}px "${TY.makeFont}", sans-serif`;
+        ctx.font = `${TY.makeWeight} ${fs}px "${TY.makeFont}", sans-serif`;
     }
-    ctx.fillStyle = T.text;
+    ctx.fillStyle = getColor(T.text, 'text');
     ctx.fillText(v.make.toUpperCase(), infoX, Y);
     Y += fs + TY.makeGap;
     
     // Model
     fs = TY.modelSize;
-    ctx.font = `400 ${fs}px "${TY.modelFont}", sans-serif`;
+    ctx.font = `${TY.modelWeight} ${fs}px "${TY.modelFont}", sans-serif`;
     while (ctx.measureText(v.model.toUpperCase()).width > infoW - 20 && fs > 30) {
         fs -= 2;
-        ctx.font = `400 ${fs}px "${TY.modelFont}", sans-serif`;
+        ctx.font = `${TY.modelWeight} ${fs}px "${TY.modelFont}", sans-serif`;
     }
     ctx.fillText(v.model.toUpperCase(), infoX, Y);
     Y += fs + TY.modelGap;
     
     // Trim
     if (visibility.showTrim) {
-        ctx.font = `600 ${TY.trimSize}px "${TY.trimFont}", sans-serif`;
-        ctx.fillStyle = T.trim;
+        ctx.font = `${TY.trimWeight} ${TY.trimSize}px "${TY.trimFont}", sans-serif`;
+        ctx.fillStyle = getColor(T.trim, 'trim');
         ctx.fillText(v.trim.toUpperCase(), infoX, Y);
         Y += TY.trimGap;
     } else {
@@ -483,29 +671,29 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
     // Price label
     if (visibility.showPriceLabel) {
         ctx.font = '600 18px "DM Sans", sans-serif';
-        ctx.fillStyle = T.priceLabel;
+        ctx.fillStyle = getColor(T.priceLabel, 'textSub');
         ctx.fillText(S.priceLabel.toUpperCase(), infoX, Y);
         Y += 28;
     }
     
     // Price
-    ctx.font = `400 ${TY.priceSize}px "${TY.priceFont}", sans-serif`;
-    ctx.fillStyle = T.price;
+    ctx.font = `${TY.priceWeight} ${TY.priceSize}px "${TY.priceFont}", sans-serif`;
+    ctx.fillStyle = getColor(T.price, 'price');
     const pTxt = '$' + v.price.toLocaleString();
     const pW = ctx.measureText(pTxt).width;
     ctx.fillText(pTxt, infoX, Y + TY.priceSize * 0.75);
     
-    // Highlight
+    // Highlight - perfectly centered with rounded corners
     if (visibility.showHighlight) {
-        ctx.font = `700 ${TY.hlSize}px "${TY.hlFont}", sans-serif`;
+        ctx.font = `${TY.hlWeight} ${TY.hlSize}px "${TY.hlFont}", sans-serif`;
         const hlW = ctx.measureText(hlTxt).width + TY.hlPad * 2;
-        const hlH = TY.hlSize + 16;
+        const hlH = TY.hlSize + 20;
         const hlX = infoX + pW + 24;
-        const hlY = Y + (TY.priceSize * 0.75) / 2 - hlH / 2 + 10;
+        const hlY = Y + (TY.priceSize * 0.75) / 2 - hlH / 2;
         ctx.fillStyle = hlBg;
-        rr(ctx, hlX, hlY, hlW, hlH, 4);
+        rr(ctx, hlX, hlY, hlW, hlH, TY.hlRadius || 8);
         ctx.fill();
-        ctx.fillStyle = T.hl.text;
+        ctx.fillStyle = getColor(T.hl.text, 'hlText');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(hlTxt, hlX + hlW / 2, hlY + hlH / 2);
@@ -518,7 +706,7 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
         Y += TY.priceSize + TY.priceGap;
         
         ctx.font = '700 20px "DM Sans", sans-serif';
-        ctx.fillStyle = accent || T.payLabel;
+        ctx.fillStyle = getColor(T.payLabel, 'payLabel');
         const plTxt = S.payLabel.toUpperCase();
         const plW = ctx.measureText(plTxt).width;
         
@@ -537,7 +725,7 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
         Y += 28;
         
         const payTxt = '$' + v.payment + S.paySuffix;
-        ctx.font = `400 ${TY.paySize}px "${TY.payFont}", sans-serif`;
+        ctx.font = `${TY.payWeight} ${TY.paySize}px "${TY.payFont}", sans-serif`;
         const payW = ctx.measureText(payTxt).width;
         const boxW = payW + TY.payPad * 2;
         const boxH = TY.paySize + 26;
@@ -545,16 +733,16 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
         ctx.fillStyle = payBg;
         rr(ctx, infoX, Y, boxW, boxH, 8);
         ctx.fill();
-        ctx.fillStyle = T.payBox.text;
+        ctx.fillStyle = getColor(T.payBox.text, 'payText');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(payTxt, infoX + boxW / 2, Y + boxH / 2 + 2);
+        ctx.fillText(payTxt, infoX + boxW / 2, Y + boxH / 2);
         ctx.textAlign = 'left';
         ctx.textBaseline = 'alphabetic';
         
         if (visibility.showDown && v.down > 0) {
             ctx.font = '500 16px "DM Sans", sans-serif';
-            ctx.fillStyle = T.textSub;
+            ctx.fillStyle = getColor(T.textSub, 'textSub');
             ctx.fillText('with $' + v.down.toLocaleString() + ' down', infoX, Y + boxH + 24);
         }
     }
@@ -571,7 +759,7 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
     ctx.globalAlpha = 1;
 }
 
-// Visibility Toggle
+// VISIBILITY TOGGLE
 function toggleVis(el) {
     const k = el.id;
     visibility[k] = !visibility[k];
@@ -580,7 +768,7 @@ function toggleVis(el) {
     updatePreview();
 }
 
-// Panel Update
+// PANEL UPDATE
 function updatePanel() {
     const v = vehicles[currentIdx];
     document.getElementById('cvName').textContent = v ? `${v.year} ${v.make} ${v.model}` : 'No vehicle';
@@ -616,7 +804,7 @@ function toggleOv(el) {
     updatePreview();
 }
 
-// Navigation
+// NAVIGATION
 function prevVehicle() {
     if (!vehicles.length) return;
     currentIdx = (currentIdx - 1 + vehicles.length) % vehicles.length;
@@ -631,14 +819,13 @@ function nextVehicle() {
     updatePreview();
 }
 
-// Days Filter - now accepts any number
+// DAYS FILTER
 function filterDays(v, minDays) {
     if (!minDays || minDays === '' || minDays === 0) return true;
-    const d = v.days ?? 0;
-    return d >= minDays;
+    return (v.days ?? 0) >= minDays;
 }
 
-// Inventory
+// INVENTORY
 function renderInv() {
     const search = (document.getElementById('invSearch')?.value || '').toLowerCase();
     const minDays = +document.getElementById('invDaysFilter')?.value || 0;
@@ -711,7 +898,6 @@ function addVehicle() {
     renderInv();
     updatePanel();
     closeModal('addModal');
-    
     ['newYear', 'newMake', 'newModel', 'newTrim', 'newStock', 'newPrice', 'newPayment', 'newImg'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('newDays').value = '0';
     document.getElementById('newDown').value = '3999';
@@ -793,10 +979,12 @@ function clearAllVehicles() {
     toast('Cleared');
 }
 
-// Feed
+// FEED
 function loadFeedFile(ev) {
     const f = ev.target.files[0];
     if (!f) return;
+    
+    feedUploadDate = new Date().toISOString();
     
     const isXL = f.name.endsWith('.xlsx') || f.name.endsWith('.xls');
     if (isXL) {
@@ -805,8 +993,9 @@ function loadFeedFile(ev) {
             try {
                 const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                 parseCSV(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]));
-                toast('Loaded');
-            } catch (err) { toast('Error'); }
+                saveFeedToFirebase();
+                toast('Feed loaded');
+            } catch (err) { toast('Error loading feed'); }
         };
         r.readAsArrayBuffer(f);
     } else {
@@ -814,32 +1003,13 @@ function loadFeedFile(ev) {
         r.onload = e => {
             try {
                 parseCSV(e.target.result);
-                toast('Loaded');
-            } catch (err) { toast('Error'); }
+                saveFeedToFirebase();
+                toast('Feed loaded');
+            } catch (err) { toast('Error loading feed'); }
         };
         r.readAsText(f);
     }
     ev.target.value = '';
-}
-
-async function loadFeedUrl() {
-    const url = document.getElementById('feedUrl').value.trim();
-    if (!url) return toast('Enter URL');
-    
-    let fetchUrl = url;
-    if (url.includes('docs.google.com/spreadsheets')) {
-        const m = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-        if (m) fetchUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`;
-    }
-    
-    try {
-        let res = await fetch(fetchUrl);
-        if (!res.ok) res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fetchUrl)}`);
-        if (res.ok) {
-            parseCSV(await res.text());
-            toast('Loaded');
-        } else toast('Failed');
-    } catch (e) { toast('Failed'); }
 }
 
 function parseCSV(text) {
@@ -905,6 +1075,7 @@ function parseCSV(text) {
     
     selectedIds = new Set();
     hydrateDropdowns();
+    updateFeedInfo();
     renderFeed();
 }
 
@@ -1066,11 +1237,11 @@ function transferToInv() {
     toast('Added ' + sel.length);
 }
 
-// Storage
+// STORAGE
 function saveStorage() {
     const data = {
         vehicles: vehicles.map(v => ({ ...v, imageObj: null })),
-        logoIdx, slideTheme, visibility, typo
+        logoIdx, slideTheme, visibility, typo, colors
     };
     localStorage.setItem('slideshower2001', JSON.stringify(data));
 }
@@ -1085,43 +1256,47 @@ function loadStorage() {
             slideTheme = d.slideTheme || 'dark';
             if (d.visibility) visibility = { ...visibility, ...d.visibility };
             if (d.typo) typo = { ...typo, ...d.typo };
+            if (d.colors) colors = { ...colors, ...d.colors };
         } catch (e) {}
     }
 }
 
-// Firebase Layouts
+// LAYOUTS
 async function saveLayout() {
-    if (!window.firebaseReady) return toast('Firebase not ready');
+    if (!window.firebaseReady || !currentUser) return toast('Not signed in');
     const name = document.getElementById('layoutName').value.trim();
     if (!name) return toast('Enter name');
     
     try {
         await window.fbHelpers.setDoc(
-            window.fbHelpers.doc(window.db, 'layouts', name.toLowerCase().replace(/\s+/g, '-')),
-            { name, slideTheme, logoIdx, visibility, typo, createdAt: new Date().toISOString() }
+            window.fbHelpers.doc(window.db, 'users', currentUser.uid, 'layouts', name.toLowerCase().replace(/\s+/g, '-')),
+            { name, slideTheme, logoIdx, visibility, typo, colors, createdAt: new Date().toISOString() }
         );
         document.getElementById('layoutName').value = '';
         loadLayouts();
-        toast('Saved');
-    } catch (e) { toast('Failed'); }
+        toast('Layout saved');
+    } catch (e) { toast('Failed to save'); }
 }
 
 async function loadLayouts() {
-    if (!window.firebaseReady) {
-        document.getElementById('savedLayouts').textContent = 'Connecting...';
+    if (!window.firebaseReady || !currentUser) {
+        document.getElementById('savedLayouts').textContent = 'Sign in to save layouts';
         return;
     }
     
     try {
-        const snap = await window.fbHelpers.getDocs(window.fbHelpers.collection(window.db, 'layouts'));
+        const snap = await window.fbHelpers.getDocs(
+            window.fbHelpers.collection(window.db, 'users', currentUser.uid, 'layouts')
+        );
         if (snap.empty) {
-            document.getElementById('savedLayouts').textContent = 'No layouts';
+            document.getElementById('savedLayouts').textContent = 'No layouts saved';
             return;
         }
         document.getElementById('savedLayouts').innerHTML = snap.docs.map(d => {
             const data = d.data();
-            return `<div style="padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:4px;cursor:pointer" onclick="loadLayout('${d.id}')">
-                <strong>${data.name}</strong> <span style="color:var(--text3)">${data.slideTheme}</span>
+            return `<div style="padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:4px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="loadLayout('${d.id}')">
+                <span><strong>${data.name}</strong> <span style="color:var(--text3)">${data.slideTheme}</span></span>
+                <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteLayout('${d.id}')">x</button>
             </div>`;
         }).join('');
     } catch (e) {
@@ -1131,24 +1306,39 @@ async function loadLayouts() {
 
 async function loadLayout(id) {
     try {
-        const snap = await window.fbHelpers.getDoc(window.fbHelpers.doc(window.db, 'layouts', id));
+        const snap = await window.fbHelpers.getDoc(
+            window.fbHelpers.doc(window.db, 'users', currentUser.uid, 'layouts', id)
+        );
         if (snap.exists()) {
             const d = snap.data();
             slideTheme = d.slideTheme || 'dark';
             logoIdx = d.logoIdx ?? 4;
             if (d.visibility) visibility = { ...visibility, ...d.visibility };
             if (d.typo) typo = { ...typo, ...d.typo };
+            if (d.colors) colors = { ...colors, ...d.colors };
             saveStorage();
             loadTypoUI();
+            loadColorsUI();
             renderThemes();
             renderLogos();
             updatePreview();
-            toast('Loaded');
+            toast('Layout loaded');
         }
+    } catch (e) { toast('Failed to load'); }
+}
+
+async function deleteLayout(id) {
+    if (!confirm('Delete layout?')) return;
+    try {
+        await window.fbHelpers.deleteDoc(
+            window.fbHelpers.doc(window.db, 'users', currentUser.uid, 'layouts', id)
+        );
+        loadLayouts();
+        toast('Deleted');
     } catch (e) { toast('Failed'); }
 }
 
-// Import/Export
+// IMPORT/EXPORT
 function handleImport(ev) {
     const f = ev.target.files[0];
     if (!f) return;
@@ -1163,8 +1353,10 @@ function handleImport(ev) {
                 slideTheme = d.slideTheme || 'dark';
                 if (d.visibility) visibility = { ...visibility, ...d.visibility };
                 if (d.typo) typo = { ...typo, ...d.typo };
+                if (d.colors) colors = { ...colors, ...d.colors };
                 saveStorage();
                 loadTypoUI();
+                loadColorsUI();
                 renderInv();
                 updatePanel();
                 renderThemes();
@@ -1174,25 +1366,30 @@ function handleImport(ev) {
             } catch (err) { toast('Error'); }
         };
         r.readAsText(f);
-    } else if (f.name.endsWith('.xlsx') || f.name.endsWith('.xls')) {
-        const r = new FileReader();
-        r.onload = e => {
-            try {
-                const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                parseCSV(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]));
-                closeModal('importModal');
-            } catch (err) { toast('Error'); }
-        };
-        r.readAsArrayBuffer(f);
-    } else {
-        const r = new FileReader();
-        r.onload = e => {
-            try {
-                parseCSV(e.target.result);
-                closeModal('importModal');
-            } catch (err) { toast('Error'); }
-        };
-        r.readAsText(f);
+    } else if (f.name.endsWith('.xlsx') || f.name.endsWith('.xls') || f.name.endsWith('.csv')) {
+        feedUploadDate = new Date().toISOString();
+        if (f.name.endsWith('.csv')) {
+            const r = new FileReader();
+            r.onload = e => {
+                try {
+                    parseCSV(e.target.result);
+                    saveFeedToFirebase();
+                    closeModal('importModal');
+                } catch (err) { toast('Error'); }
+            };
+            r.readAsText(f);
+        } else {
+            const r = new FileReader();
+            r.onload = e => {
+                try {
+                    const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    parseCSV(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]));
+                    saveFeedToFirebase();
+                    closeModal('importModal');
+                } catch (err) { toast('Error'); }
+            };
+            r.readAsArrayBuffer(f);
+        }
     }
     ev.target.value = '';
 }
@@ -1201,7 +1398,7 @@ function exportProject() {
     const data = {
         version: '2001',
         vehicles: vehicles.map(v => ({ ...v, imageObj: null })),
-        logoIdx, slideTheme, visibility, typo
+        logoIdx, slideTheme, visibility, typo, colors
     };
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
@@ -1210,7 +1407,7 @@ function exportProject() {
     toast('Exported');
 }
 
-// Preview & Video
+// PREVIEW & VIDEO
 function previewSlideshow() {
     if (!vehicles.length) return toast('Add vehicles');
     let idx = 0;
@@ -1321,7 +1518,7 @@ function downloadSlide() {
     toast('Exported');
 }
 
-// UI Helpers
+// UI HELPERS
 function showModal(id) { document.getElementById(id).classList.add('active'); }
 function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 function closeAllModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
@@ -1333,3 +1530,13 @@ function toast(msg) {
     document.getElementById('toasts').appendChild(t);
     setTimeout(() => t.remove(), 3000);
 }
+
+// Initialize visibility toggles on page load (after auth)
+document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('keydown', e => {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+        if (e.key === 'Escape') closeAllModals();
+        if (e.key === 'ArrowLeft') prevVehicle();
+        if (e.key === 'ArrowRight') nextVehicle();
+    });
+});

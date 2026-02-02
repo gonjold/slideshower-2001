@@ -13,28 +13,74 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         const firebaseConfig = { apiKey: "AIzaSyB4yBhV6xHoDFOlX9e-OACAsI9i2QukmfA", authDomain: "slideshower-2001.firebaseapp.com", projectId: "slideshower-2001", storageBucket: "slideshower-2001.firebasestorage.app", messagingSenderId: "492074566821", appId: "1:492074566821:web:b440b35b91327eaf91794c" };
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
+        window.auth = getAuth(app);
         window.fbHelpers = { collection, doc, setDoc, getDoc, getDocs, deleteDoc };
+        window.authHelpers = { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged };
         window.firebaseReady = true;
+        
+        onAuthStateChanged(window.auth, (user) => {
+            if (user) {
+                document.getElementById('loginPage').style.display = 'none';
+                document.getElementById('appPage').style.display = 'grid';
+                document.getElementById('userEmail').textContent = user.email;
+                if (window.onUserLogin) window.onUserLogin(user);
+            } else {
+                document.getElementById('loginPage').style.display = 'flex';
+                document.getElementById('appPage').style.display = 'none';
+            }
+        });
     </script>
 </head>
 <body>
-<div class="app">
+<!-- LOGIN PAGE -->
+<div class="login-page" id="loginPage">
+    <div class="login-card">
+        <div class="login-logo">
+            <img src="https://res.cloudinary.com/dgcdcqjrz/image/upload/v1767624172/TOCC_BUG_-_COLOR_cag4ud.png" alt="Logo">
+            <h1>Slideshower <span>2001</span></h1>
+        </div>
+        <div class="login-tabs">
+            <button class="login-tab active" onclick="showLoginTab('signin')">Sign In</button>
+            <button class="login-tab" onclick="showLoginTab('signup')">Sign Up</button>
+        </div>
+        <form id="signinForm" class="login-form" onsubmit="handleSignIn(event)">
+            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="signinEmail" required></div>
+            <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="signinPassword" required></div>
+            <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+            <div class="login-error" id="signinError"></div>
+        </form>
+        <form id="signupForm" class="login-form" style="display:none" onsubmit="handleSignUp(event)">
+            <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="signupEmail" required></div>
+            <div class="form-group"><label class="form-label">Password</label><input type="password" class="form-input" id="signupPassword" required minlength="6"></div>
+            <div class="form-group"><label class="form-label">Confirm Password</label><input type="password" class="form-input" id="signupConfirm" required minlength="6"></div>
+            <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+            <div class="login-error" id="signupError"></div>
+        </form>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="appPage" style="display:none">
     <header class="header">
         <div class="logo"><img src="https://res.cloudinary.com/dgcdcqjrz/image/upload/v1767624172/TOCC_BUG_-_COLOR_cag4ud.png">Slideshower<b>2001</b></div>
         <div class="spacer"></div>
-        <div class="sync">Synced</div>
+        <div class="user-info"><span id="userEmail"></span><button class="btn btn-sm" onclick="handleSignOut()">Sign Out</button></div>
+        <div class="sync" id="syncStatus">Synced</div>
         <button class="btn" onclick="showModal('importModal')">Import</button>
         <button class="btn" onclick="exportProject()">Export</button>
         <button class="btn" onclick="previewSlideshow()">Preview</button>
         <button class="btn btn-primary" onclick="generateVideo()">Generate Video</button>
     </header>
+    
     <aside class="sidebar">
         <div class="nav-item active" data-view="feed" onclick="switchView('feed')">Feed</div>
         <div class="nav-item" data-view="inventory" onclick="switchView('inventory')">Inventory<span class="nav-badge" id="invBadge">0</span></div>
         <div class="nav-item" data-view="design" onclick="switchView('design')">Design</div>
+        <div class="nav-item" data-view="colors" onclick="switchView('colors')">Colors</div>
         <div class="nav-item" data-view="settings" onclick="switchView('settings')">Settings</div>
         <div class="section-title">Theme</div>
         <div class="theme-grid" id="themeGrid"></div>
@@ -52,18 +98,25 @@
         <div class="toggle-row"><span>Down</span><div class="toggle" id="showDown" onclick="toggleVis(this)"></div></div>
         <div class="toggle-row"><span>Disclaimer</span><div class="toggle active" id="showDisclaimer" onclick="toggleVis(this)"></div></div>
     </aside>
+    
     <main class="main">
         <!-- FEED VIEW -->
         <div class="view active" id="feedView" style="background:var(--bg)">
-            <div class="view-header"><h2>Vehicle Feed</h2><div class="spacer"></div><button class="btn btn-sm" onclick="showModal('feedUrlModal')">URL</button><button class="btn btn-sm" onclick="document.getElementById('feedFile').click()">Upload</button><input type="file" id="feedFile" accept=".csv,.xlsx,.xls" hidden onchange="loadFeedFile(event)"></div>
+            <div class="view-header">
+                <h2>Vehicle Feed</h2>
+                <div class="feed-info" id="feedInfo">No feed loaded</div>
+                <div class="spacer"></div>
+                <button class="btn btn-primary" onclick="document.getElementById('feedFile').click()">Upload Feed</button>
+                <input type="file" id="feedFile" accept=".csv,.xlsx,.xls" hidden onchange="loadFeedFile(event)">
+            </div>
             <div class="view-body">
                 <div class="calc-bar"><strong>Payment Calc</strong><div><label>Rate%</label><input type="number" class="form-input" id="globalRate" value="6.9" step="0.1"></div><div><label>Term</label><select class="form-select" id="globalTerm"><option value="48">48</option><option value="60">60</option><option value="72" selected>72</option><option value="84">84</option></select></div><div><label>Down$</label><input type="number" class="form-input" id="globalDown" value="3999" step="500"></div></div>
                 <div class="filters">
                     <input type="text" class="form-input" id="feedSearch" placeholder="Search..." oninput="renderFeed()">
                     <select class="form-select" id="feedType" onchange="renderFeed()"><option value="all">All Types</option><option value="N">New</option><option value="U">Used</option></select>
-                    <select class="form-select" id="feedMake" onchange="onMakeChange()"></select>
-                    <select class="form-select" id="feedModel" onchange="renderFeed()"></select>
-                    <select class="form-select" id="feedYear" onchange="renderFeed()"></select>
+                    <select class="form-select" id="feedMake" onchange="onMakeChange()"><option value="all">All Makes</option></select>
+                    <select class="form-select" id="feedModel" onchange="renderFeed()"><option value="all">All Models</option></select>
+                    <select class="form-select" id="feedYear" onchange="renderFeed()"><option value="all">All Years</option></select>
                     <div class="days-filter-group"><label>Days</label><input type="number" class="form-input" id="feedDays" min="0" placeholder="0" oninput="renderFeed()"><span>+</span></div>
                     <label class="filter-check"><input type="checkbox" id="feedHasImg" checked onchange="renderFeed()">Has Image</label>
                     <div class="spacer"></div>
@@ -77,6 +130,7 @@
                 </div>
             </div>
         </div>
+        
         <!-- INVENTORY VIEW -->
         <div class="view" id="inventoryView" style="background:var(--bg)">
             <div class="view-header">
@@ -91,6 +145,7 @@
             </div>
             <div class="view-body"><div class="inv-grid" id="invGrid"></div></div>
         </div>
+        
         <!-- DESIGN VIEW -->
         <div class="view" id="designView">
             <div class="toolbar"><button class="btn btn-sm" onclick="zoomOut()">-</button><span class="zoom-label" id="zoomLabel">50%</span><button class="btn btn-sm" onclick="zoomIn()">+</button><button class="btn btn-sm" onclick="zoomFit()">Fit</button><div class="spacer"></div><button class="btn btn-sm" onclick="downloadSlide()">Export Slide</button></div>
@@ -101,6 +156,54 @@
             </div>
             <div class="canvas-nav"><button class="btn" onclick="prevVehicle()">Previous</button><div class="nav-info"><strong id="navTitle">No Vehicle</strong><span id="navSub">Add vehicles</span></div><button class="btn" onclick="nextVehicle()">Next</button></div>
         </div>
+        
+        <!-- COLORS VIEW -->
+        <div class="view" id="colorsView" style="background:var(--bg)">
+            <div class="view-body">
+                <h2 style="margin-bottom:16px">Global Color Overrides</h2>
+                <p style="color:var(--text3);margin-bottom:20px;font-size:13px">Override theme colors. Leave text fields empty to use theme defaults.</p>
+                <div class="color-grid">
+                    <div class="color-card">
+                        <h3>Accent Colors</h3>
+                        <div class="color-row"><label>Primary Accent</label><input type="color" id="colorAccent" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorAccentText" placeholder="#EB0A1E" oninput="syncColorFromText('colorAccent')"></div>
+                        <div class="color-row"><label>Year Text</label><input type="color" id="colorYear" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorYearText" placeholder="Theme default" oninput="syncColorFromText('colorYear')"></div>
+                        <div class="color-row"><label>Line/Border</label><input type="color" id="colorLine" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorLineText" placeholder="Theme default" oninput="syncColorFromText('colorLine')"></div>
+                    </div>
+                    <div class="color-card">
+                        <h3>Text Colors</h3>
+                        <div class="color-row"><label>Main Text</label><input type="color" id="colorText" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorTextText" placeholder="Theme default" oninput="syncColorFromText('colorText')"></div>
+                        <div class="color-row"><label>Sub Text</label><input type="color" id="colorTextSub" value="#888888" oninput="updateColors()"><input type="text" class="form-input" id="colorTextSubText" placeholder="Theme default" oninput="syncColorFromText('colorTextSub')"></div>
+                        <div class="color-row"><label>Price</label><input type="color" id="colorPrice" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorPriceText" placeholder="Theme default" oninput="syncColorFromText('colorPrice')"></div>
+                        <div class="color-row"><label>Trim</label><input type="color" id="colorTrim" value="#a1a1a1" oninput="updateColors()"><input type="text" class="form-input" id="colorTrimText" placeholder="Theme default" oninput="syncColorFromText('colorTrim')"></div>
+                    </div>
+                    <div class="color-card">
+                        <h3>Badge</h3>
+                        <div class="color-row"><label>Background</label><input type="color" id="colorBadgeBg" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorBadgeBgText" placeholder="Theme default" oninput="syncColorFromText('colorBadgeBg')"></div>
+                        <div class="color-row"><label>Text</label><input type="color" id="colorBadgeText" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorBadgeTextText" placeholder="Theme default" oninput="syncColorFromText('colorBadgeText')"></div>
+                    </div>
+                    <div class="color-card">
+                        <h3>Highlight Box</h3>
+                        <div class="color-row"><label>Background</label><input type="color" id="colorHlBg" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorHlBgText" placeholder="Theme default" oninput="syncColorFromText('colorHlBg')"></div>
+                        <div class="color-row"><label>Text</label><input type="color" id="colorHlText" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorHlTextText" placeholder="Theme default" oninput="syncColorFromText('colorHlText')"></div>
+                        <div class="form-group" style="margin-top:10px"><label class="form-label">Corner Radius</label><div class="slider-row"><input type="range" id="hlRadius" min="0" max="30" value="8" oninput="saveTypo();updatePreview()"><span class="val" id="hlRadiusVal">8</span></div></div>
+                    </div>
+                    <div class="color-card">
+                        <h3>Payment Box</h3>
+                        <div class="color-row"><label>Background</label><input type="color" id="colorPayBg" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorPayBgText" placeholder="Theme default" oninput="syncColorFromText('colorPayBg')"></div>
+                        <div class="color-row"><label>Text</label><input type="color" id="colorPayText" value="#ffffff" oninput="updateColors()"><input type="text" class="form-input" id="colorPayTextText" placeholder="Theme default" oninput="syncColorFromText('colorPayText')"></div>
+                        <div class="color-row"><label>Label</label><input type="color" id="colorPayLabel" value="#EB0A1E" oninput="updateColors()"><input type="text" class="form-input" id="colorPayLabelText" placeholder="Theme default" oninput="syncColorFromText('colorPayLabel')"></div>
+                    </div>
+                    <div class="color-card">
+                        <h3>Background</h3>
+                        <div class="color-row"><label>Gradient Start</label><input type="color" id="colorBg1" value="#0f0f0f" oninput="updateColors()"><input type="text" class="form-input" id="colorBg1Text" placeholder="Theme default" oninput="syncColorFromText('colorBg1')"></div>
+                        <div class="color-row"><label>Gradient End</label><input type="color" id="colorBg2" value="#1a1a1a" oninput="updateColors()"><input type="text" class="form-input" id="colorBg2Text" placeholder="Theme default" oninput="syncColorFromText('colorBg2')"></div>
+                        <div class="color-row"><label>Card</label><input type="color" id="colorCard" value="#1a1a1a" oninput="updateColors()"><input type="text" class="form-input" id="colorCardText" placeholder="Theme default" oninput="syncColorFromText('colorCard')"></div>
+                    </div>
+                </div>
+                <div style="margin-top:20px"><button class="btn" onclick="resetColors()">Reset to Theme Defaults</button></div>
+            </div>
+        </div>
+        
         <!-- SETTINGS VIEW -->
         <div class="view" id="settingsView" style="background:var(--bg)">
             <div class="view-body">
@@ -128,6 +231,7 @@
             </div>
         </div>
     </main>
+    
     <aside class="panel">
         <div class="panel-title">Current Vehicle</div>
         <div id="cvName" style="font-weight:500;font-size:13px">No vehicle</div>
@@ -142,13 +246,76 @@
         <div class="toggle-row"><span>Hide Payment</span><div class="toggle" id="ovHidePay" onclick="toggleOv(this)"></div></div>
         
         <div class="panel-title">Global Typography <span class="badge">All Slides</span></div>
-        <div class="form-row-3"><div class="form-group"><label class="form-label">Year Font</label><select class="form-select" id="yearFont" onchange="saveTypo();updatePreview()"></select></div><div class="form-group"><label class="form-label">Size</label><input type="number" class="form-input" id="yearSize" value="30" oninput="saveTypo();updatePreview()"></div><div class="form-group"><label class="form-label">Gap</label><input type="number" class="form-input" id="yearGap" value="5" oninput="saveTypo();updatePreview()"></div></div>
-        <div class="form-row-3"><div class="form-group"><label class="form-label">Make Font</label><select class="form-select" id="makeFont" onchange="saveTypo();updatePreview()"></select></div><div class="form-group"><label class="form-label">Size</label><input type="number" class="form-input" id="makeSize" value="66" oninput="saveTypo();updatePreview()"></div><div class="form-group"><label class="form-label">Gap</label><input type="number" class="form-input" id="makeGap" value="-15" oninput="saveTypo();updatePreview()"></div></div>
-        <div class="form-row-3"><div class="form-group"><label class="form-label">Model Font</label><select class="form-select" id="modelFont" onchange="saveTypo();updatePreview()"></select></div><div class="form-group"><label class="form-label">Size</label><input type="number" class="form-input" id="modelSize" value="66" oninput="saveTypo();updatePreview()"></div><div class="form-group"><label class="form-label">Gap</label><input type="number" class="form-input" id="modelGap" value="-15" oninput="saveTypo();updatePreview()"></div></div>
-        <div class="form-row-3"><div class="form-group"><label class="form-label">Trim Font</label><select class="form-select" id="trimFont" onchange="saveTypo();updatePreview()"></select></div><div class="form-group"><label class="form-label">Size</label><input type="number" class="form-input" id="trimSize" value="26" oninput="saveTypo();updatePreview()"></div><div class="form-group"><label class="form-label">Gap</label><input type="number" class="form-input" id="trimGap" value="50" oninput="saveTypo();updatePreview()"></div></div>
-        <div class="form-row-3"><div class="form-group"><label class="form-label">Price Font</label><select class="form-select" id="priceFont" onchange="saveTypo();updatePreview()"></select></div><div class="form-group"><label class="form-label">Size</label><input type="number" class="form-input" id="priceSize" value="70" oninput="saveTypo();updatePreview()"></div><div class="form-group"><label class="form-label">Gap</label><input type="number" class="form-input" id="priceGap" value="30" oninput="saveTypo();updatePreview()"></div></div>
-        <div class="form-row-3"><div class="form-group"><label class="form-label">Highlight</label><select class="form-select" id="hlFont" onchange="saveTypo();updatePreview()"></select></div><div class="form-group"><label class="form-label">Size</label><input type="number" class="form-input" id="hlSize" value="44" oninput="saveTypo();updatePreview()"></div><div class="form-group"><label class="form-label">Pad</label><input type="number" class="form-input" id="hlPad" value="14" oninput="saveTypo();updatePreview()"></div></div>
-        <div class="form-row-3"><div class="form-group"><label class="form-label">Payment</label><select class="form-select" id="payFont" onchange="saveTypo();updatePreview()"></select></div><div class="form-group"><label class="form-label">Size</label><input type="number" class="form-input" id="paySize" value="60" oninput="saveTypo();updatePreview()"></div><div class="form-group"><label class="form-label">Pad</label><input type="number" class="form-input" id="payPad" value="25" oninput="saveTypo();updatePreview()"></div></div>
+        
+        <div class="typo-section">
+            <div class="typo-label">Year</div>
+            <div class="typo-row">
+                <select class="form-select" id="yearFont"></select>
+                <select class="form-select typo-weight" id="yearWeight"></select>
+                <input type="number" class="form-input typo-size" id="yearSize" value="30">
+            </div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="yearGap" min="-20" max="40" value="5" oninput="saveTypo();updatePreview()"><span class="val" id="yearGapVal">5</span></div>
+        </div>
+        
+        <div class="typo-section">
+            <div class="typo-label">Make</div>
+            <div class="typo-row">
+                <select class="form-select" id="makeFont"></select>
+                <select class="form-select typo-weight" id="makeWeight"></select>
+                <input type="number" class="form-input typo-size" id="makeSize" value="66">
+            </div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="makeGap" min="-30" max="30" value="-15" oninput="saveTypo();updatePreview()"><span class="val" id="makeGapVal">-15</span></div>
+        </div>
+        
+        <div class="typo-section">
+            <div class="typo-label">Model</div>
+            <div class="typo-row">
+                <select class="form-select" id="modelFont"></select>
+                <select class="form-select typo-weight" id="modelWeight"></select>
+                <input type="number" class="form-input typo-size" id="modelSize" value="66">
+            </div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="modelGap" min="-30" max="30" value="-15" oninput="saveTypo();updatePreview()"><span class="val" id="modelGapVal">-15</span></div>
+        </div>
+        
+        <div class="typo-section">
+            <div class="typo-label">Trim</div>
+            <div class="typo-row">
+                <select class="form-select" id="trimFont"></select>
+                <select class="form-select typo-weight" id="trimWeight"></select>
+                <input type="number" class="form-input typo-size" id="trimSize" value="26">
+            </div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="trimGap" min="0" max="80" value="50" oninput="saveTypo();updatePreview()"><span class="val" id="trimGapVal">50</span></div>
+        </div>
+        
+        <div class="typo-section">
+            <div class="typo-label">Price</div>
+            <div class="typo-row">
+                <select class="form-select" id="priceFont"></select>
+                <select class="form-select typo-weight" id="priceWeight"></select>
+                <input type="number" class="form-input typo-size" id="priceSize" value="70">
+            </div>
+            <div class="slider-row"><span class="slider-label">Gap</span><input type="range" id="priceGap" min="0" max="60" value="30" oninput="saveTypo();updatePreview()"><span class="val" id="priceGapVal">30</span></div>
+        </div>
+        
+        <div class="typo-section">
+            <div class="typo-label">Highlight</div>
+            <div class="typo-row">
+                <select class="form-select" id="hlFont"></select>
+                <select class="form-select typo-weight" id="hlWeight"></select>
+                <input type="number" class="form-input typo-size" id="hlSize" value="44">
+            </div>
+            <div class="slider-row"><span class="slider-label">Pad</span><input type="range" id="hlPad" min="8" max="40" value="14" oninput="saveTypo();updatePreview()"><span class="val" id="hlPadVal">14</span></div>
+        </div>
+        
+        <div class="typo-section">
+            <div class="typo-label">Payment</div>
+            <div class="typo-row">
+                <select class="form-select" id="payFont"></select>
+                <select class="form-select typo-weight" id="payWeight"></select>
+                <input type="number" class="form-input typo-size" id="paySize" value="60">
+            </div>
+            <div class="slider-row"><span class="slider-label">Pad</span><input type="range" id="payPad" min="10" max="50" value="25" oninput="saveTypo();updatePreview()"><span class="val" id="payPadVal">25</span></div>
+        </div>
         
         <div class="panel-title">Global Spacing <span class="badge">All Slides</span></div>
         <div class="form-group"><label class="form-label">Canvas Margin</label><div class="slider-row"><input type="range" id="marginOuter" min="40" max="120" value="80" oninput="saveTypo();updatePreview()"><span class="val" id="marginOuterVal">80</span></div></div>
@@ -157,14 +324,19 @@
         <div class="form-group"><label class="form-label">Header Top</label><div class="slider-row"><input type="range" id="headerTop" min="30" max="100" value="50" oninput="saveTypo();updatePreview()"><span class="val" id="headerTopVal">50</span></div></div>
     </aside>
 </div>
+
 <!-- MODALS -->
-<div class="modal-overlay" id="importModal"><div class="modal"><div class="modal-header"><h3>Import</h3><button class="modal-close" onclick="closeModal('importModal')">x</button></div><div class="modal-body"><div class="drop-zone" onclick="document.getElementById('importFile').click()"><input type="file" id="importFile" accept=".json,.csv,.xlsx" hidden onchange="handleImport(event)">Click to upload CSV, XLSX, or JSON</div></div></div></div>
-<div class="modal-overlay" id="feedUrlModal"><div class="modal"><div class="modal-header"><h3>Load Feed URL</h3><button class="modal-close" onclick="closeModal('feedUrlModal')">x</button></div><div class="modal-body"><div class="form-group"><label class="form-label">URL</label><input type="text" class="form-input" id="feedUrl" placeholder="https://..."></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('feedUrlModal')">Cancel</button><button class="btn btn-primary" onclick="loadFeedUrl();closeModal('feedUrlModal')">Load</button></div></div></div>
-<div class="modal-overlay" id="addModal"><div class="modal"><div class="modal-header"><h3>Add Vehicle</h3><button class="modal-close" onclick="closeModal('addModal')">x</button></div><div class="modal-body"><div class="form-row"><div class="form-group"><label class="form-label">Year</label><input type="text" class="form-input" id="newYear"></div><div class="form-group"><label class="form-label">Make</label><input type="text" class="form-input" id="newMake"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Model</label><input type="text" class="form-input" id="newModel"></div><div class="form-group"><label class="form-label">Trim</label><input type="text" class="form-input" id="newTrim"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Stock</label><input type="text" class="form-input" id="newStock"></div><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input" id="newPrice"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Payment</label><input type="number" class="form-input" id="newPayment"></div><div class="form-group"><label class="form-label">Down</label><input type="number" class="form-input" id="newDown" value="3999"></div></div><div class="form-group"><label class="form-label">Days</label><input type="number" class="form-input" id="newDays" value="0"></div><div class="form-group"><label class="form-label">Image URL</label><input type="text" class="form-input" id="newImg"></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('addModal')">Cancel</button><button class="btn btn-primary" onclick="addVehicle()">Add</button></div></div></div>
-<div class="modal-overlay" id="editModal"><div class="modal"><div class="modal-header"><h3>Edit Vehicle</h3><button class="modal-close" onclick="closeModal('editModal')">x</button></div><div class="modal-body"><input type="hidden" id="editIdx"><div class="form-row"><div class="form-group"><label class="form-label">Year</label><input type="text" class="form-input" id="editYear"></div><div class="form-group"><label class="form-label">Make</label><input type="text" class="form-input" id="editMake"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Model</label><input type="text" class="form-input" id="editModel"></div><div class="form-group"><label class="form-label">Trim</label><input type="text" class="form-input" id="editTrim"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Stock</label><input type="text" class="form-input" id="editStock"></div><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input" id="editPrice"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Payment</label><input type="number" class="form-input" id="editPayment"></div><div class="form-group"><label class="form-label">Down</label><input type="number" class="form-input" id="editDown"></div></div><div class="form-group"><label class="form-label">Days</label><input type="number" class="form-input" id="editDays"></div><div class="form-group"><label class="form-label">Image URL</label><input type="text" class="form-input" id="editImg"></div></div><div class="modal-footer"><button class="btn btn-danger" onclick="deleteVehicle(+document.getElementById('editIdx').value);closeModal('editModal')">Delete</button><div class="spacer"></div><button class="btn" onclick="closeModal('editModal')">Cancel</button><button class="btn btn-primary" onclick="saveEdit()">Save</button></div></div></div>
+<div class="modal-overlay" id="importModal"><div class="modal"><div class="modal-header"><h3>Import</h3><button class="modal-close" onclick="closeModal('importModal')">×</button></div><div class="modal-body"><div class="drop-zone" onclick="document.getElementById('importFile').click()"><input type="file" id="importFile" accept=".json,.csv,.xlsx" hidden onchange="handleImport(event)">Click to upload CSV, XLSX, or JSON</div></div></div></div>
+
+<div class="modal-overlay" id="addModal"><div class="modal"><div class="modal-header"><h3>Add Vehicle</h3><button class="modal-close" onclick="closeModal('addModal')">×</button></div><div class="modal-body"><div class="form-row"><div class="form-group"><label class="form-label">Year</label><input type="text" class="form-input" id="newYear"></div><div class="form-group"><label class="form-label">Make</label><input type="text" class="form-input" id="newMake"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Model</label><input type="text" class="form-input" id="newModel"></div><div class="form-group"><label class="form-label">Trim</label><input type="text" class="form-input" id="newTrim"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Stock</label><input type="text" class="form-input" id="newStock"></div><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input" id="newPrice"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Payment</label><input type="number" class="form-input" id="newPayment"></div><div class="form-group"><label class="form-label">Down</label><input type="number" class="form-input" id="newDown" value="3999"></div></div><div class="form-group"><label class="form-label">Days</label><input type="number" class="form-input" id="newDays" value="0"></div><div class="form-group"><label class="form-label">Image URL</label><input type="text" class="form-input" id="newImg"></div></div><div class="modal-footer"><button class="btn" onclick="closeModal('addModal')">Cancel</button><button class="btn btn-primary" onclick="addVehicle()">Add</button></div></div></div>
+
+<div class="modal-overlay" id="editModal"><div class="modal"><div class="modal-header"><h3>Edit Vehicle</h3><button class="modal-close" onclick="closeModal('editModal')">×</button></div><div class="modal-body"><input type="hidden" id="editIdx"><div class="form-row"><div class="form-group"><label class="form-label">Year</label><input type="text" class="form-input" id="editYear"></div><div class="form-group"><label class="form-label">Make</label><input type="text" class="form-input" id="editMake"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Model</label><input type="text" class="form-input" id="editModel"></div><div class="form-group"><label class="form-label">Trim</label><input type="text" class="form-input" id="editTrim"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Stock</label><input type="text" class="form-input" id="editStock"></div><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input" id="editPrice"></div></div><div class="form-row"><div class="form-group"><label class="form-label">Payment</label><input type="number" class="form-input" id="editPayment"></div><div class="form-group"><label class="form-label">Down</label><input type="number" class="form-input" id="editDown"></div></div><div class="form-group"><label class="form-label">Days</label><input type="number" class="form-input" id="editDays"></div><div class="form-group"><label class="form-label">Image URL</label><input type="text" class="form-input" id="editImg"></div></div><div class="modal-footer"><button class="btn btn-danger" onclick="deleteVehicle(+document.getElementById('editIdx').value);closeModal('editModal')">Delete</button><div class="spacer"></div><button class="btn" onclick="closeModal('editModal')">Cancel</button><button class="btn btn-primary" onclick="saveEdit()">Save</button></div></div></div>
+
 <div class="modal-overlay" id="progressModal"><div class="modal" style="max-width:320px"><div class="modal-body" style="text-align:center;padding:28px"><div id="progressTitle" style="font-weight:500;margin-bottom:14px">Processing...</div><div class="progress"><div class="progress-bar" id="progressBar" style="width:0"></div></div><div id="progressText" style="margin-top:10px;font-size:11px;color:var(--text3)">Please wait</div></div></div></div>
+
 <div class="recording" id="recording">Recording...</div>
 <div class="toast-wrap" id="toasts"></div>
+
 <script src="js/themes.js"></script>
 <script src="js/app.js"></script>
 </body>

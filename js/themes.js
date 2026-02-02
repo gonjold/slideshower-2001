@@ -9,10 +9,35 @@ const LOGOS = [
     { url: 'https://res.cloudinary.com/dgcdcqjrz/image/upload/v1769619580/Toyota_OEM_logo_only_jx3svj.png', dark: false },
 ];
 
-// Font options for dropdowns - includes Toyota Type
+// Font options with available weights
 const FONTS = {
-    display: ['Bebas Neue', 'Barlow Condensed', 'Oswald', 'Toyota Type', 'Anton', 'Teko', 'Montserrat'],
-    body: ['DM Sans', 'Roboto', 'Inter', 'Toyota Type', 'Montserrat']
+    display: [
+        { name: 'Bebas Neue', weights: [400] },
+        { name: 'Barlow Condensed', weights: [400, 500, 600, 700, 800] },
+        { name: 'Oswald', weights: [400, 500, 600, 700] },
+        { name: 'Toyota Type', weights: [300, 400, 500, 600, 700, 900] },
+        { name: 'Anton', weights: [400] },
+        { name: 'Teko', weights: [400, 500, 600, 700] },
+        { name: 'Montserrat', weights: [400, 500, 600, 700, 800] }
+    ],
+    body: [
+        { name: 'DM Sans', weights: [400, 500, 600, 700] },
+        { name: 'Roboto', weights: [400, 500, 700] },
+        { name: 'Inter', weights: [400, 500, 600, 700] },
+        { name: 'Toyota Type', weights: [300, 400, 500, 600, 700, 900] },
+        { name: 'Montserrat', weights: [400, 500, 600, 700, 800] }
+    ]
+};
+
+// Weight labels for display
+const WEIGHT_LABELS = {
+    300: 'Light',
+    400: 'Regular',
+    500: 'Medium',
+    600: 'SemiBold',
+    700: 'Bold',
+    800: 'ExtraBold',
+    900: 'Black'
 };
 
 const THEMES = {
