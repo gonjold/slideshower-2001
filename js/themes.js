@@ -18,14 +18,31 @@ const FONTS = {
         { name: 'Toyota Type', weights: [300, 400, 500, 600, 700, 900] },
         { name: 'Anton', weights: [400] },
         { name: 'Teko', weights: [400, 500, 600, 700] },
-        { name: 'Montserrat', weights: [400, 500, 600, 700, 800] }
+        { name: 'Montserrat', weights: [400, 500, 600, 700, 800, 900] },
+        { name: 'Roboto', weights: [400, 500, 700, 900] },
+        { name: 'Roboto Condensed', weights: [400, 700] },
+        { name: 'Inter', weights: [400, 500, 600, 700, 800, 900] },
+        { name: 'Poppins', weights: [400, 500, 600, 700, 800, 900] },
+        { name: 'Raleway', weights: [400, 500, 600, 700, 800, 900] },
+        { name: 'Archivo Black', weights: [400] },
+        { name: 'Black Ops One', weights: [400] },
+        { name: 'Russo One', weights: [400] },
+        { name: 'Righteous', weights: [400] },
+        { name: 'Rajdhani', weights: [400, 500, 600, 700] },
+        { name: 'Chakra Petch', weights: [400, 500, 600, 700] }
     ],
     body: [
         { name: 'DM Sans', weights: [400, 500, 600, 700] },
         { name: 'Roboto', weights: [400, 500, 700] },
-        { name: 'Inter', weights: [400, 500, 600, 700] },
+        { name: 'Inter', weights: [400, 500, 600, 700, 800, 900] },
         { name: 'Toyota Type', weights: [300, 400, 500, 600, 700, 900] },
-        { name: 'Montserrat', weights: [400, 500, 600, 700, 800] }
+        { name: 'Montserrat', weights: [400, 500, 600, 700, 800, 900] },
+        { name: 'Poppins', weights: [400, 500, 600, 700, 800, 900] },
+        { name: 'Raleway', weights: [400, 500, 600, 700, 800, 900] },
+        { name: 'Open Sans', weights: [400, 500, 600, 700, 800] },
+        { name: 'Lato', weights: [400, 700, 900] },
+        { name: 'Nunito', weights: [400, 500, 600, 700, 800, 900] },
+        { name: 'Source Sans 3', weights: [400, 500, 600, 700, 800, 900] }
     ]
 };
 

@@ -27,6 +27,9 @@ let typo = {
     priceFont: 'Bebas Neue', priceWeight: 400, priceSize: 70, priceGap: 30,
     hlFont: 'Barlow Condensed', hlWeight: 700, hlSize: 44, hlPad: 14, hlRadius: 8,
     payFont: 'Bebas Neue', payWeight: 400, paySize: 60, payPad: 25,
+    badgeFont: 'Montserrat', badgeWeight: 700, badgeSize: 22,
+    downFont: 'DM Sans', downWeight: 500, downSize: 16,
+    discFont: 'Inter', discWeight: 400, discSize: 18,
     marginOuter: 80, cardPad: 24, infoOffset: 50, headerTop: 50
 };
 
@@ -35,6 +38,7 @@ let colors = {
     accent: '', year: '', line: '', text: '', textSub: '', price: '', trim: '',
     badgeBg: '', badgeText: '', hlBg: '', hlText: '',
     payBg: '', payText: '', payLabel: '',
+    downText: '', discText: '',
     bg1: '', bg2: '', card: ''
 };
 
@@ -155,7 +159,7 @@ function loadTypoUI() {
     const displayFonts = FONTS.display;
     const bodyFonts = FONTS.body;
     
-    ['year', 'make', 'model', 'price', 'hl', 'pay'].forEach(id => {
+    ['year', 'make', 'model', 'price', 'hl', 'pay', 'badge'].forEach(id => {
         const fontEl = document.getElementById(id + 'Font');
         if (fontEl) {
             fontEl.innerHTML = displayFonts.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
@@ -165,7 +169,7 @@ function loadTypoUI() {
         updateWeightOptions(id);
     });
     
-    ['trim'].forEach(id => {
+    ['trim', 'down', 'disc'].forEach(id => {
         const fontEl = document.getElementById(id + 'Font');
         if (fontEl) {
             fontEl.innerHTML = bodyFonts.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
@@ -176,7 +180,7 @@ function loadTypoUI() {
     });
     
     // Set sizes
-    ['year', 'make', 'model', 'trim', 'price', 'hl', 'pay'].forEach(id => {
+    ['year', 'make', 'model', 'trim', 'price', 'hl', 'pay', 'badge', 'down', 'disc'].forEach(id => {
         const sizeEl = document.getElementById(id + 'Size');
         if (sizeEl) sizeEl.value = typo[id + 'Size'];
     });
@@ -256,6 +260,18 @@ function saveTypo() {
     typo.paySize = +document.getElementById('paySize')?.value || 60;
     typo.payPad = +document.getElementById('payPad')?.value || 25;
     
+    typo.badgeFont = document.getElementById('badgeFont')?.value || typo.badgeFont;
+    typo.badgeWeight = +document.getElementById('badgeWeight')?.value || 700;
+    typo.badgeSize = +document.getElementById('badgeSize')?.value || 22;
+    
+    typo.downFont = document.getElementById('downFont')?.value || typo.downFont;
+    typo.downWeight = +document.getElementById('downWeight')?.value || 500;
+    typo.downSize = +document.getElementById('downSize')?.value || 16;
+    
+    typo.discFont = document.getElementById('discFont')?.value || typo.discFont;
+    typo.discWeight = +document.getElementById('discWeight')?.value || 400;
+    typo.discSize = +document.getElementById('discSize')?.value || 18;
+    
     typo.marginOuter = +document.getElementById('marginOuter')?.value || 80;
     typo.cardPad = +document.getElementById('cardPad')?.value || 24;
     typo.infoOffset = +document.getElementById('infoOffset')?.value || 50;
@@ -294,7 +310,8 @@ function capitalize(s) {
 function updateColors() {
     const colorKeys = ['accent', 'year', 'line', 'text', 'textSub', 'price', 'trim',
                        'badgeBg', 'badgeText', 'hlBg', 'hlText', 
-                       'payBg', 'payText', 'payLabel', 'bg1', 'bg2', 'card'];
+                       'payBg', 'payText', 'payLabel', 'downText', 'discText',
+                       'bg1', 'bg2', 'card'];
     
     colorKeys.forEach(key => {
         const picker = document.getElementById('color' + capitalize(key));
@@ -341,6 +358,11 @@ function switchView(v) {
     if (v === 'design') {
         setTimeout(() => {
             initCanvas();
+            loadLogo().then(updatePreview);
+        }, 50);
+    }
+    if (v === 'colors') {
+        setTimeout(() => {
             loadLogo().then(updatePreview);
         }, 50);
     }
@@ -434,15 +456,35 @@ let updateTO;
 function updatePreview() {
     clearTimeout(updateTO);
     updateTO = setTimeout(() => {
-        const canvas = document.getElementById('mainCanvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
         const v = vehicles[currentIdx] || {
             year: '2025', make: 'Toyota', model: 'Camry', trim: 'XSE',
             stock: 'T12345', price: 34999, payment: 499, down: 3999,
             days: 0, imageUrl: '', imageObj: null
         };
-        loadImg(v).then(() => drawSlide(ctx, v, 1920, 1080, 1, currentIdx));
+        
+        loadImg(v).then(() => {
+            // Main design canvas
+            const canvas = document.getElementById('mainCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                drawSlide(ctx, v, 1920, 1080, 1, currentIdx);
+            }
+            
+            // Color preview canvas
+            const colorCanvas = document.getElementById('colorPreviewCanvas');
+            if (colorCanvas) {
+                const ctx2 = colorCanvas.getContext('2d');
+                drawSlide(ctx2, v, 1920, 1080, 1, currentIdx);
+            }
+            
+            // Update color preview info
+            const colorInfo = document.getElementById('colorPreviewInfo');
+            if (colorInfo) {
+                colorInfo.textContent = vehicles[currentIdx] 
+                    ? `${v.year} ${v.make} ${v.model} (${currentIdx + 1}/${vehicles.length})`
+                    : 'No Vehicle';
+            }
+        });
     }, 50);
 }
 
@@ -538,9 +580,9 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
     
     // Badge
     if (visibility.showBadge) {
-        ctx.font = '700 22px "Montserrat", sans-serif';
+        ctx.font = `${TY.badgeWeight} ${TY.badgeSize}px "${TY.badgeFont}", sans-serif`;
         const bW = ctx.measureText(badgeTxt).width + 36;
-        const bH = 44;
+        const bH = TY.badgeSize + 22;
         const bX = badgeL ? M : W - M - bW;
         const bY = M - 8;
         ctx.fillStyle = badgeBg;
@@ -741,16 +783,16 @@ function drawSlide(ctx, v, W, H, opacity, idx) {
         ctx.textBaseline = 'alphabetic';
         
         if (visibility.showDown && v.down > 0) {
-            ctx.font = '500 16px "DM Sans", sans-serif';
-            ctx.fillStyle = getColor(T.textSub, 'textSub');
+            ctx.font = `${TY.downWeight} ${TY.downSize}px "${TY.downFont}", sans-serif`;
+            ctx.fillStyle = getColor(T.textSub, 'downText');
             ctx.fillText('with $' + v.down.toLocaleString() + ' down', infoX, Y + boxH + 24);
         }
     }
     
     // Disclaimer
     if (visibility.showDisclaimer && S.disc) {
-        ctx.font = '400 18px "Inter", sans-serif';
-        ctx.fillStyle = T.disc;
+        ctx.font = `${TY.discWeight} ${TY.discSize}px "${TY.discFont}", sans-serif`;
+        ctx.fillStyle = getColor(T.disc, 'discText');
         ctx.textAlign = 'center';
         ctx.fillText(S.disc, W / 2, H - M + 24);
         ctx.textAlign = 'left';
