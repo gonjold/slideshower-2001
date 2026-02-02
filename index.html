@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slideshower 2001 | Toyota of Coconut Creek</title>
+    <link rel="icon" href="https://res.cloudinary.com/dgcdcqjrz/image/upload/v1767624172/TOCC_BUG_-_COLOR_cag4ud.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700;800&family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:wght@400;500;600;700&family=Teko:wght@400;500;600;700&family=Antonio:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @font-face { font-family: 'Toyota Type'; src: url('https://res.cloudinary.com/dgcdcqjrz/raw/upload/v1769631833/ToyotaType-Light_k0vwbf.ttf') format('truetype'); font-weight: 300; }
+        @font-face { font-family: 'Toyota Type'; src: url('https://res.cloudinary.com/dgcdcqjrz/raw/upload/v1769631833/ToyotaType-Book_jxqcqz.ttf') format('truetype'); font-weight: 400; }
+        @font-face { font-family: 'Toyota Type'; src: url('https://res.cloudinary.com/dgcdcqjrz/raw/upload/v1769631833/ToyotaType-Regular_x0fblq.ttf') format('truetype'); font-weight: 500; }
+        @font-face { font-family: 'Toyota Type'; src: url('https://res.cloudinary.com/dgcdcqjrz/raw/upload/v1769631833/ToyotaType-Semibold_xgfplw.ttf') format('truetype'); font-weight: 600; }
+        @font-face { font-family: 'Toyota Type'; src: url('https://res.cloudinary.com/dgcdcqjrz/raw/upload/v1769631834/ToyotaType-Bold_hehwid.ttf') format('truetype'); font-weight: 700; }
+        @font-face { font-family: 'Toyota Type'; src: url('https://res.cloudinary.com/dgcdcqjrz/raw/upload/v1769631833/ToyotaType-Black_yxu4fl.ttf') format('truetype'); font-weight: 900; }
+    </style>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+        const firebaseConfig = { apiKey: "AIzaSyB4yBhV6xHoDFOlX9e-OACAsI9i2QukmfA", authDomain: "slideshower-2001.firebaseapp.com", projectId: "slideshower-2001", storageBucket: "slideshower-2001.firebasestorage.app", messagingSenderId: "492074566821", appId: "1:492074566821:web:b440b35b91327eaf91794c" };
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.storage = getStorage(app);
+        window.fbHelpers = { collection, doc, setDoc, getDoc, getDocs, deleteDoc, query, orderBy, ref, uploadBytes, getDownloadURL };
+        window.firebaseReady = true;
+        document.dispatchEvent(new Event('firebaseReady'));
+    </script>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #ffffff; --bg-secondary: #f8f9fa; --bg-tertiary: #f1f3f5; --border: #e9ecef;
+            --text-primary: #212529; --text-secondary: #495057; --text-muted: #868e96;
+            --accent: #EB0A1E; --accent-hover: #c4081a; --success: #12B76A; --error: #F04438;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08); --radius: 8px; --font: 'Toyota Type', 'DM Sans', sans-serif;
+        }
+        [data-theme="dark"] {
+            --bg-primary: #0f0f10; --bg-secondary: #18181b; --bg-tertiary: #27272a; --border: #3f3f46;
+            --text-primary: #fafafa; --text-secondary: #a1a1aa; --text-muted: #71717a;
+        }
+        html { font-size: 14px; }
+        body { font-family: var(--font); background: var(--bg-secondary); color: var(--text-primary); min-height: 100vh; }
+        
+        /* Layout */
+        .app { display: grid; grid-template-columns: 260px 1fr 300px; grid-template-rows: 56px 1fr; height: 100vh; }
+        .header { grid-column: 1/-1; background: var(--bg-primary); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 16px; }
+        .sidebar { background: var(--bg-primary); border-right: 1px solid var(--border); overflow-y: auto; padding: 12px; }
+        .main { background: #1a1a1a; display: flex; flex-direction: column; overflow: hidden; }
+        .panel { background: var(--bg-primary); border-left: 1px solid var(--border); overflow-y: auto; padding: 16px; }
+        
+        /* Header */
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo img { height: 32px; }
+        .logo-text { font-weight: 700; font-size: 1rem; }
+        .logo-badge { background: var(--accent); color: white; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        .spacer { flex: 1; }
+        .sync { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-muted); }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+        
+        /* Buttons */
+        .btn { padding: 8px 14px; border: 1px solid var(--border); background: var(--bg-primary); border-radius: var(--radius); font-family: var(--font); font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+        .btn:hover { border-color: var(--text-muted); color: var(--text-primary); }
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-sm { padding: 6px 10px; font-size: 0.8rem; }
+        .btn-icon { width: 32px; height: 32px; padding: 0; justify-content: center; }
+        .btn-danger { color: var(--error); border-color: var(--error); }
+        .btn-danger:hover { background: var(--error); color: white; }
+        
+        /* Nav */
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius); cursor: pointer; margin-bottom: 4px; transition: all 0.15s; }
+        .nav-item:hover { background: var(--bg-tertiary); }
+        .nav-item.active { background: rgba(235,10,30,0.1); color: var(--accent); }
+        .nav-icon { font-size: 1.1rem; }
+        .nav-label { font-size: 0.9rem; font-weight: 500; }
+        .nav-badge { margin-left: auto; background: var(--accent); color: white; font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        
+        /* Section titles */
+        .section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin: 16px 0 8px; padding: 0 4px; }
+        
+        /* Theme grid */
+        .theme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .theme-card { padding: 6px; border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.15s; }
+        .theme-card:hover { border-color: var(--text-muted); }
+        .theme-card.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(235,10,30,0.15); }
+        .theme-preview { height: 32px; border-radius: 4px; margin-bottom: 4px; }
+        .theme-name { font-size: 0.7rem; font-weight: 600; text-align: center; }
+        .theme-month { font-size: 0.6rem; color: var(--text-muted); text-align: center; }
+        
+        /* Logo grid */
+        .logo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .logo-option { aspect-ratio: 16/10; border: 2px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 6px; background: var(--bg-secondary); transition: all 0.15s; }
+        .logo-option:hover { border-color: var(--text-muted); }
+        .logo-option.selected { border-color: var(--accent); }
+        .logo-option.dark-bg { background: #1a1a1a; }
+        .logo-option img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .logo-option.add { border-style: dashed; flex-direction: column; font-size: 0.7rem; color: var(--text-muted); gap: 2px; }
+        
+        /* Toggle */
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; }
+        .toggle-label { font-size: 0.85rem; color: var(--text-secondary); }
+        .toggle { width: 36px; height: 20px; background: var(--border); border-radius: 10px; cursor: pointer; position: relative; transition: background 0.15s; }
+        .toggle.active { background: var(--accent); }
+        .toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.15s; }
+        .toggle.active::after { transform: translateX(16px); }
+        
+        /* Forms */
+        .form-group { margin-bottom: 12px; }
+        .form-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; }
+        .form-input, .form-select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); background: var(--bg-secondary); border-radius: var(--radius); font-family: var(--font); font-size: 0.85rem; color: var(--text-primary); }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--accent); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .form-textarea { min-height: 60px; resize: vertical; }
+        
+        /* Canvas area */
+        .canvas-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--bg-primary); border-radius: var(--radius); margin: 16px; }
+        .zoom-display { font-size: 0.8rem; color: var(--text-muted); min-width: 40px; text-align: center; }
+        .canvas-container { flex: 1; display: flex; align-items: center; justify-content: center; padding: 0 16px; }
+        .canvas-wrapper { background: #000; border-radius: var(--radius); box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow: hidden; }
+        .canvas-wrapper canvas { display: block; }
+        .vehicle-nav { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px; background: var(--bg-primary); border-radius: var(--radius); margin: 16px; }
+        .nav-arrow { width: 36px; height: 36px; border: 1px solid var(--border); background: var(--bg-primary); border-radius: var(--radius); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .nav-arrow:hover { border-color: var(--accent); color: var(--accent); }
+        .nav-info { text-align: center; min-width: 180px; }
+        .nav-title { font-weight: 700; }
+        .nav-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+        
+        /* Tables */
+        .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); background: var(--bg-tertiary); position: sticky; top: 0; }
+        th.sortable { cursor: pointer; }
+        th.sortable:hover { color: var(--accent); }
+        tr:hover { background: var(--bg-tertiary); }
+        tr.selected { background: rgba(235,10,30,0.08); }
+        .feed-thumb { width: 70px; height: 52px; border-radius: 4px; object-fit: cover; background: var(--bg-tertiary); }
+        .days-pill { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: var(--bg-tertiary); }
+        .days-pill.warning { background: rgba(247,144,9,0.15); color: #F79009; }
+        .days-pill.danger { background: rgba(240,68,56,0.15); color: var(--error); }
+        
+        /* Cards */
+        .card { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: all 0.15s; }
+        .card:hover { border-color: var(--text-muted); box-shadow: var(--shadow); }
+        .card-img { width: 100%; height: 140px; object-fit: cover; background: var(--bg-tertiary); }
+        .card-body { padding: 12px; }
+        .card-title { font-weight: 700; margin-bottom: 2px; }
+        .card-subtitle { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 8px; }
+        .card-price { font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+        .card-actions { display: flex; gap: 6px; margin-top: 10px; }
+        
+        /* Grid layouts */
+        .inventory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; padding: 16px; }
+        
+        /* View containers */
+        .view { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+        .view.active { display: flex; }
+        .view-header { display: flex; align-items: center; gap: 12px; padding: 16px; background: var(--bg-primary); border-bottom: 1px solid var(--border); }
+        .view-header h2 { font-size: 1.1rem; font-weight: 700; }
+        .view-body { flex: 1; overflow-y: auto; }
+        
+        /* Calc bar */
+        .calc-bar { display: flex; align-items: center; gap: 16px; padding: 12px 16px; background: var(--bg-tertiary); border-radius: var(--radius); margin: 16px; flex-wrap: wrap; }
+        .calc-bar strong { font-size: 0.9rem; }
+        .calc-bar label { font-size: 0.75rem; color: var(--text-muted); }
+        .calc-bar input, .calc-bar select { width: 70px; padding: 6px 8px; }
+        
+        /* Filters */
+        .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 0 16px 16px; }
+        .filters .form-input, .filters .form-select { width: auto; min-width: 100px; }
+        
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-primary); border-radius: 12px; width: 90%; max-width: 480px; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+        .modal-title { font-weight: 700; font-size: 1.05rem; }
+        .modal-close { width: 28px; height: 28px; border: none; background: var(--bg-tertiary); border-radius: var(--radius); cursor: pointer; font-size: 1.1rem; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: var(--error); color: white; }
+        .modal-body { padding: 20px; max-height: 60vh; overflow-y: auto; }
+        .modal-footer { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+        
+        /* Drop zone */
+        .drop-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; cursor: pointer; transition: all 0.15s; }
+        .drop-zone:hover { border-color: var(--accent); background: rgba(235,10,30,0.05); }
+        .drop-zone-icon { font-size: 2rem; margin-bottom: 8px; }
+        .drop-zone-text { font-weight: 600; }
+        .drop-zone-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+        
+        /* Toast */
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 1100; display: flex; flex-direction: column; gap: 8px; }
+        .toast { background: var(--bg-primary); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s; }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--error); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        /* Progress */
+        .progress-bar { width: 100%; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+        
+        /* Preview overlay */
+        .preview-overlay { position: fixed; inset: 0; background: #000; z-index: 900; display: none; flex-direction: column; }
+        .preview-overlay.active { display: flex; }
+        .preview-header { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.8); }
+        .preview-header span { color: white; font-weight: 600; }
+        .preview-canvas { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .preview-canvas canvas { max-width: 100%; max-height: 100%; }
+        
+        /* Recording */
+        .recording { position: fixed; top: 70px; right: 20px; background: var(--error); color: white; padding: 6px 14px; border-radius: var(--radius); font-weight: 600; display: none; animation: pulse 1s infinite; z-index: 800; }
+        .recording.active { display: block; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        
+        /* Saved layouts */
+        .saved-list { display: grid; gap: 8px; margin-top: 12px; }
+        .saved-item { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; }
+        .saved-item:hover { border-color: var(--accent); }
+        .saved-name { font-weight: 600; font-size: 0.9rem; }
+        .saved-meta { font-size: 0.75rem; color: var(--text-muted); }
+        
+        /* Empty state */
+        .empty { text-align: center; padding: 48px 24px; color: var(--text-muted); }
+        .empty-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.5; }
+        .empty-title { font-size: 1rem; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="logo">
+                <img src="https://res.cloudinary.com/dgcdcqjrz/image/upload/v1767624172/TOCC_BUG_-_COLOR_cag4ud.png" alt="">
+                <span class="logo-text">Slideshower</span>
+                <span class="logo-badge">2001</span>
+            </div>
+            <div class="spacer"></div>
+            <div class="sync"><span class="sync-dot"></span><span>Synced</span></div>
+            <button class="btn btn-sm" onclick="showModal('importModal')">📥 Import</button>
+            <button class="btn btn-sm" onclick="exportProject()">📤 Export</button>
+            <button class="btn btn-sm" onclick="previewSlideshow()">▶ Preview</button>
+            <button class="btn btn-sm btn-primary" onclick="generateVideo()">🎬 Generate</button>
+            <button class="btn btn-icon btn-sm" onclick="toggleTheme()" id="themeBtn">◐</button>
+        </header>
+        
+        <aside class="sidebar">
+            <div class="section-title">Workflow</div>
+            <div class="nav-item active" data-view="feed" onclick="switchView('feed')"><span class="nav-icon">📋</span><span class="nav-label">Feed</span></div>
+            <div class="nav-item" data-view="inventory" onclick="switchView('inventory')"><span class="nav-icon">🚗</span><span class="nav-label">Inventory</span><span class="nav-badge" id="invBadge">0</span></div>
+            <div class="nav-item" data-view="design" onclick="switchView('design')"><span class="nav-icon">🎨</span><span class="nav-label">Design</span></div>
+            <div class="nav-item" data-view="settings" onclick="switchView('settings')"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></div>
+            
+            <div class="section-title">Theme</div>
+            <div class="theme-grid" id="themeGrid"></div>
+            
+            <div class="section-title">Logo</div>
+            <div class="logo-grid" id="logoGrid"></div>
+            <div class="form-group" style="margin-top:10px">
+                <label class="form-label">Size</label>
+                <input type="range" class="form-input" id="logoSize" min="60" max="200" value="120" oninput="updatePreview()" style="padding:0">
+            </div>
+            
+            <div class="section-title">Show/Hide</div>
+            <div class="toggle-row"><span class="toggle-label">Badge</span><div class="toggle active" id="showBadge" onclick="toggleVis(this)"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Stock #</span><div class="toggle active" id="showStock" onclick="toggleVis(this)"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Year</span><div class="toggle active" id="showYear" onclick="toggleVis(this)"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Trim</span><div class="toggle active" id="showTrim" onclick="toggleVis(this)"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Price Label</span><div class="toggle active" id="showPriceLabel" onclick="toggleVis(this)"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Highlight</span><div class="toggle active" id="showHighlight" onclick="toggleVis(this)"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Payment</span><div class="toggle active" id="showPayment" onclick="toggleVis(this)"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Down</span><div class="toggle active" id="showDown" onclick="toggleVis(this)"></div></div>
+            <div class="toggle-row"><span class="toggle-label">Disclaimer</span><div class="toggle active" id="showDisclaimer" onclick="toggleVis(this)"></div></div>
+        </aside>
+        
+        <main class="main">
+            <!-- Feed View -->
+            <div class="view active" id="feedView">
+                <div class="view-header">
+                    <h2>Vehicle Feed</h2>
+                    <div class="spacer"></div>
+                    <button class="btn btn-sm" onclick="showModal('feedUrlModal')">🔗 URL</button>
+                    <button class="btn btn-sm" onclick="document.getElementById('feedFile').click()">📁 Upload</button>
+                    <input type="file" id="feedFile" accept=".csv,.xlsx,.xls" style="display:none" onchange="loadFeedFile(event)">
+                </div>
+                <div class="calc-bar">
+                    <strong>Payment Calc</strong>
+                    <div><label>Rate %</label><input type="number" class="form-input" id="globalRate" value="7.9" step="0.1"></div>
+                    <div><label>Term</label><select class="form-select" id="globalTerm"><option value="48">48</option><option value="60">60</option><option value="72" selected>72</option><option value="84">84</option></select></div>
+                    <div><label>Down $</label><input type="number" class="form-input" id="globalDown" value="0" step="500"></div>
+                </div>
+                <div class="filters">
+                    <input type="text" class="form-input" id="feedSearch" placeholder="Search..." oninput="renderFeedTable()">
+                    <select class="form-select" id="feedType" onchange="renderFeedTable()"><option value="all">All</option><option value="N">New</option><option value="U">Used</option></select>
+                    <select class="form-select" id="feedMake" onchange="onMakeChange()"></select>
+                    <select class="form-select" id="feedModel" onchange="renderFeedTable()"></select>
+                    <select class="form-select" id="feedYear" onchange="renderFeedTable()"></select>
+                    <label style="display:flex;align-items:center;gap:4px;font-size:0.85rem"><input type="checkbox" id="feedHasImg" checked onchange="renderFeedTable()"> Has Image</label>
+                    <div class="spacer"></div>
+                    <span id="feedCount" style="color:var(--text-muted)">0 vehicles</span>
+                    <button class="btn btn-sm" onclick="selectAllFeed()">Select All</button>
+                    <button class="btn btn-sm" onclick="clearFeedSelection()">Clear</button>
+                    <button class="btn btn-sm btn-primary" onclick="transferToInventory()">Add →</button>
+                </div>
+                <div class="view-body" style="padding:0 16px 16px">
+                    <div class="table-wrap" style="max-height:calc(100vh - 280px);overflow-y:auto">
+                        <table><thead><tr>
+                            <th style="width:36px"><input type="checkbox" id="feedSelectAll" onchange="toggleSelectAll(this.checked)"></th>
+                            <th style="width:80px">Image</th>
+                            <th class="sortable" onclick="setSort('vehicle')">Vehicle</th>
+                            <th class="sortable" onclick="setSort('stock')">Stock</th>
+                            <th class="sortable" onclick="setSort('type')">Type</th>
+                            <th class="sortable" onclick="setSort('price')">Price</th>
+                            <th class="sortable" onclick="setSort('days')">Days</th>
+                        </tr></thead><tbody id="feedBody"></tbody></table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Inventory View -->
+            <div class="view" id="inventoryView">
+                <div class="view-header">
+                    <h2>Inventory</h2>
+                    <input type="text" class="form-input" id="invSearch" placeholder="Search..." style="width:200px" oninput="renderInventory()">
+                    <div class="spacer"></div>
+                    <span id="invCount" style="color:var(--text-muted)">0 vehicles</span>
+                    <button class="btn btn-sm" onclick="shuffleVehicles()">🔀 Shuffle</button>
+                    <button class="btn btn-sm" onclick="showModal('addModal')">+ Add</button>
+                    <button class="btn btn-sm btn-danger" onclick="clearAllVehicles()">Clear</button>
+                </div>
+                <div class="view-body inventory-grid" id="invGrid"></div>
+            </div>
+            
+            <!-- Design View -->
+            <div class="view" id="designView">
+                <div class="canvas-toolbar">
+                    <button class="btn btn-sm btn-icon" onclick="zoomOut()">−</button>
+                    <span class="zoom-display" id="zoomDisp">50%</span>
+                    <button class="btn btn-sm btn-icon" onclick="zoomIn()">+</button>
+                    <button class="btn btn-sm" onclick="zoomFit()">Fit</button>
+                    <div class="spacer"></div>
+                    <button class="btn btn-sm" onclick="downloadSlide()">📷 Export Slide</button>
+                </div>
+                <div class="canvas-container" id="canvasCont">
+                    <div class="canvas-wrapper" id="canvasWrap"><canvas id="mainCanvas" width="1920" height="1080"></canvas></div>
+                </div>
+                <div class="vehicle-nav">
+                    <button class="nav-arrow" onclick="prevVehicle()">←</button>
+                    <div class="nav-info"><div class="nav-title" id="navTitle">Sample Vehicle</div><div class="nav-subtitle" id="navSub">Add vehicles</div></div>
+                    <button class="nav-arrow" onclick="nextVehicle()">→</button>
+                </div>
+            </div>
+            
+            <!-- Settings View -->
+            <div class="view" id="settingsView" style="padding:20px;overflow-y:auto">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px">
+                    <div class="card"><div class="card-body">
+                        <h3 style="margin-bottom:16px">Default Text</h3>
+                        <div class="form-group"><label class="form-label">Badge Text</label><input type="text" class="form-input" id="badgeText" value="PRE-OWNED SPECIAL" oninput="updatePreview()"></div>
+                        <div class="form-group"><label class="form-label">Price Label</label><input type="text" class="form-input" id="priceLabelText" value="BUY FOR ONLY" oninput="updatePreview()"></div>
+                        <div class="form-group"><label class="form-label">Highlight</label><input type="text" class="form-input" id="highlightText" value="$0 DOWN" oninput="updatePreview()"></div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Payment Label</label><input type="text" class="form-input" id="paymentLabel" value="OR PAYMENTS FROM" oninput="updatePreview()"></div>
+                            <div class="form-group"><label class="form-label">Suffix</label><input type="text" class="form-input" id="paymentSuffix" value="/MO" oninput="updatePreview()"></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Disclaimer</label><textarea class="form-input form-textarea" id="disclaimer" oninput="updatePreview()">Tier 1 credit 740+ Equifax. $3,999 down plus tax, tag, and fees. 72 months at 6.9% APR with approved credit. See dealer for details.</textarea></div>
+                    </div></div>
+                    <div class="card"><div class="card-body">
+                        <h3 style="margin-bottom:16px">Video Output</h3>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Resolution</label><select class="form-select" id="videoRes"><option value="1920x1080" selected>1080p</option><option value="1280x720">720p</option><option value="3840x2160">4K</option></select></div>
+                            <div class="form-group"><label class="form-label">FPS</label><select class="form-select" id="fps"><option value="24">24</option><option value="30" selected>30</option><option value="60">60</option></select></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label class="form-label">Slide Duration (s)</label><input type="number" class="form-input" id="slideDur" value="8" min="3" max="30"></div>
+                            <div class="form-group"><label class="form-label">Transition (s)</label><input type="number" class="form-input" id="transDur" value="1" min="0" max="3" step="0.5"></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Transition Type</label><select class="form-select" id="transType"><option value="slideLeft" selected>Slide Left</option><option value="fade">Fade</option><option value="none">Cut</option></select></div>
+                    </div></div>
+                    <div class="card"><div class="card-body">
+                        <h3 style="margin-bottom:16px">☁️ Saved Layouts</h3>
+                        <div class="form-row"><input type="text" class="form-input" id="layoutName" placeholder="Layout name..."><button class="btn btn-primary" onclick="saveLayout()">Save</button></div>
+                        <div class="saved-list" id="savedLayouts"><span style="color:var(--text-muted);font-size:0.85rem">Loading...</span></div>
+                    </div></div>
+                    <div class="card"><div class="card-body">
+                        <h3 style="margin-bottom:16px">Layout Options</h3>
+                        <div class="form-group"><label class="form-label">Image Position</label><select class="form-select" id="imgPos" onchange="updatePreview()"><option value="left">Left</option><option value="right">Right</option><option value="alternate">Alternate</option></select></div>
+                        <div class="form-group"><label class="form-label">Image Size</label><select class="form-select" id="imgSize" onchange="updatePreview()"><option value="small">Small</option><option value="medium" selected>Medium</option><option value="large">Large</option></select></div>
+                        <div class="form-group"><label class="form-label">Badge Position</label><select class="form-select" id="badgePos" onchange="updatePreview()"><option value="top-right">Top Right</option><option value="top-left">Top Left</option></select></div>
+                        <div class="form-group"><label class="form-label">Card Style</label><select class="form-select" id="cardStyle" onchange="updatePreview()"><option value="shadow">Shadow</option><option value="flat">Flat</option><option value="border">Border</option></select></div>
+                    </div></div>
+                </div>
+            </div>
+        </main>
+        
+        <aside class="panel">
+            <div class="section-title">Current Vehicle</div>
+            <div id="cvPanel">
+                <div style="font-weight:700;font-size:1rem" id="cvName">No vehicle</div>
+                <div style="font-size:0.85rem;color:var(--text-muted)" id="cvStock">-</div>
+                <div style="font-weight:700;font-size:1.2rem;color:var(--accent);margin-top:8px" id="cvPrice">-</div>
+            </div>
+            
+            <div class="section-title" style="margin-top:20px">Override for This Slide</div>
+            <div class="form-group"><label class="form-label">Badge Override</label><input type="text" class="form-input" id="ovBadge" placeholder="e.g. MANAGER SPECIAL" oninput="updateOverride()"></div>
+            <div class="form-group"><label class="form-label">Highlight Override</label><input type="text" class="form-input" id="ovHighlight" placeholder="e.g. SAVE $5,000" oninput="updateOverride()"></div>
+            <div class="form-group"><label class="form-label">Accent Color</label><input type="text" class="form-input" id="ovColor" placeholder="#EB0A1E" oninput="updateOverride()"></div>
+            <div class="toggle-row"><span class="toggle-label">Hide Payment</span><div class="toggle" id="ovHidePay" onclick="toggleOverride(this)"></div></div>
+            
+            <div class="section-title" style="margin-top:20px">Typography</div>
+            <div class="form-group"><label class="form-label">Make Font</label><select class="form-select" id="makeFont" onchange="updatePreview()"><option>Toyota Type</option><option>Bebas Neue</option><option>Oswald</option><option>Teko</option><option>Barlow Condensed</option><option>Antonio</option></select></div>
+            <div class="form-group"><label class="form-label">Make Size</label><input type="range" class="form-input" id="makeSize" min="32" max="80" value="56" oninput="updatePreview()" style="padding:0"></div>
+            <div class="form-group"><label class="form-label">Price Font</label><select class="form-select" id="priceFont" onchange="updatePreview()"><option>Toyota Type</option><option>Bebas Neue</option><option>Oswald</option><option>Teko</option></select></div>
+            <div class="form-group"><label class="form-label">Price Size</label><input type="range" class="form-input" id="priceSize" min="48" max="96" value="72" oninput="updatePreview()" style="padding:0"></div>
+        </aside>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal-overlay" id="importModal"><div class="modal"><div class="modal-header"><span class="modal-title">Import</span><button class="modal-close" onclick="closeModal('importModal')">×</button></div><div class="modal-body">
+        <div class="drop-zone" onclick="document.getElementById('importFile').click()"><input type="file" id="importFile" accept=".json,.csv,.xlsx,.xls" style="display:none" onchange="handleImport(event)"><div class="drop-zone-icon">📁</div><div class="drop-zone-text">Click to upload</div><div class="drop-zone-hint">CSV, XLSX, or JSON project</div></div>
+    </div></div></div>
+    
+    <div class="modal-overlay" id="feedUrlModal"><div class="modal"><div class="modal-header"><span class="modal-title">Load Feed URL</span><button class="modal-close" onclick="closeModal('feedUrlModal')">×</button></div><div class="modal-body">
+        <div class="form-group"><label class="form-label">URL</label><input type="text" class="form-input" id="feedUrl" placeholder="https://docs.google.com/spreadsheets/d/..."></div>
+    </div><div class="modal-footer"><button class="btn" onclick="closeModal('feedUrlModal')">Cancel</button><button class="btn btn-primary" onclick="loadFeedUrl();closeModal('feedUrlModal')">Load</button></div></div></div>
+    
+    <div class="modal-overlay" id="addModal"><div class="modal"><div class="modal-header"><span class="modal-title">Add Vehicle</span><button class="modal-close" onclick="closeModal('addModal')">×</button></div><div class="modal-body">
+        <div class="form-row"><div class="form-group"><label class="form-label">Year</label><input type="text" class="form-input" id="newYear" placeholder="2025"></div><div class="form-group"><label class="form-label">Make</label><input type="text" class="form-input" id="newMake" placeholder="Toyota"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Model</label><input type="text" class="form-input" id="newModel" placeholder="Camry"></div><div class="form-group"><label class="form-label">Trim</label><input type="text" class="form-input" id="newTrim" placeholder="XSE V6"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Stock #</label><input type="text" class="form-input" id="newStock" placeholder="T12345"></div><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input" id="newPrice" placeholder="34999"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Payment</label><input type="number" class="form-input" id="newPayment" placeholder="499"></div><div class="form-group"><label class="form-label">Down</label><input type="number" class="form-input" id="newDown" placeholder="2999"></div></div>
+        <div class="form-group"><label class="form-label">Image URL</label><input type="text" class="form-input" id="newImageUrl" placeholder="https://..."></div>
+    </div><div class="modal-footer"><button class="btn" onclick="closeModal('addModal')">Cancel</button><button class="btn btn-primary" onclick="addVehicle()">Add</button></div></div></div>
+    
+    <div class="modal-overlay" id="editModal"><div class="modal"><div class="modal-header"><span class="modal-title">Edit Vehicle</span><button class="modal-close" onclick="closeModal('editModal')">×</button></div><div class="modal-body">
+        <input type="hidden" id="editIdx">
+        <div class="form-row"><div class="form-group"><label class="form-label">Year</label><input type="text" class="form-input" id="editYear"></div><div class="form-group"><label class="form-label">Make</label><input type="text" class="form-input" id="editMake"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Model</label><input type="text" class="form-input" id="editModel"></div><div class="form-group"><label class="form-label">Trim</label><input type="text" class="form-input" id="editTrim"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Stock #</label><input type="text" class="form-input" id="editStock"></div><div class="form-group"><label class="form-label">Price</label><input type="number" class="form-input" id="editPrice"></div></div>
+        <div class="form-row"><div class="form-group"><label class="form-label">Payment</label><input type="number" class="form-input" id="editPayment"></div><div class="form-group"><label class="form-label">Down</label><input type="number" class="form-input" id="editDown"></div></div>
+        <div class="form-group"><label class="form-label">Image URL</label><input type="text" class="form-input" id="editImageUrl"></div>
+    </div><div class="modal-footer"><button class="btn btn-danger" onclick="deleteVehicle(parseInt(document.getElementById('editIdx').value));closeModal('editModal')">Delete</button><div class="spacer"></div><button class="btn" onclick="closeModal('editModal')">Cancel</button><button class="btn btn-primary" onclick="saveEdit()">Save</button></div></div></div>
+    
+    <div class="modal-overlay" id="progressModal"><div class="modal" style="max-width:360px"><div class="modal-body" style="text-align:center;padding:32px"><div id="progressTitle" style="font-weight:700;margin-bottom:16px">Processing...</div><div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0"></div></div><div id="progressText" style="margin-top:12px;color:var(--text-muted)">Please wait...</div></div></div></div>
+    
+    <div class="modal-overlay" id="logoModal"><div class="modal"><div class="modal-header"><span class="modal-title">Add Custom Logo</span><button class="modal-close" onclick="closeModal('logoModal')">×</button></div><div class="modal-body">
+        <div class="form-group"><label class="form-label">Logo URL</label><input type="text" class="form-input" id="customLogoUrl" placeholder="https://..."></div>
+        <div class="toggle-row"><span class="toggle-label">Dark background</span><div class="toggle" id="customLogoDark" onclick="this.classList.toggle('active')"></div></div>
+    </div><div class="modal-footer"><button class="btn" onclick="closeModal('logoModal')">Cancel</button><button class="btn btn-primary" onclick="addCustomLogo()">Add</button></div></div></div>
+    
+    <div class="preview-overlay" id="previewOverlay"><div class="preview-header"><span id="previewTitle">Preview</span><button class="btn" onclick="closePreview()">Close</button></div><div class="preview-canvas"><canvas id="previewCanvas" width="1920" height="1080"></canvas></div></div>
+    <div class="recording" id="recording">● Recording...</div>
+    <div class="toast-container" id="toasts"></div>
+
+    <script>
+// ==================== DATA ====================
+const LOGOS = [
+    { url: 'https://res.cloudinary.com/dgcdcqjrz/image/upload/v1767624172/TOCC_BUG_-_COLOR_cag4ud.png', dark: false },
+    { url: 'https://res.cloudinary.com/dgcdcqjrz/image/upload/v1770057984/TOCC_logo_main_horz_gg6ayu.png', dark: false },
+    { url: 'https://res.cloudinary.com/dgcdcqjrz/image/upload/v1768852071/TOCC_logo_white_glow_text_y0ruv5.png', dark: true },
+    { url: 'https://res.cloudinary.com/dgcdcqjrz/image/upload/v1768852076/TOCC_logo_red_text_yyyykc.png', dark: false },
+    { url: 'https://res.cloudinary.com/dgcdcqjrz/image/upload/v1769619581/Toyota_OEM_horizontal_xciceq.png', dark: false },
+    { url: 'https://res.cloudinary.com/dgcdcqjrz/image/upload/v1769619580/Toyota_OEM_logo_only_jx3svj.png', dark: false },
+];
+
+const THEMES = {
+    dark: { name: 'Classic Dark', month: 'Standard', bg: ['#0f0f0f', '#1a1a1a'], card: '#1a1a1a', cardShadow: 'rgba(0,0,0,0.5)', imgBg: '#0d0d0d', text: '#ffffff', textSub: '#888888', year: '#EB0A1E', trim: '#888888', priceLabel: '#888888', price: '#ffffff', highlight: { bg: '#EB0A1E', text: '#ffffff' }, badge: { bg: '#EB0A1E', text: '#ffffff' }, payBox: { bg: '#EB0A1E', text: '#ffffff' }, payLabel: '#EB0A1E', line: '#EB0A1E', disclaimer: '#555555' },
+    light: { name: 'Classic Light', month: 'Standard', bg: ['#e8e8e8', '#f2f2f2'], card: '#ffffff', cardShadow: 'rgba(0,0,0,0.1)', imgBg: '#e0e0e0', text: '#111111', textSub: '#555555', year: '#EB0A1E', trim: '#666666', priceLabel: '#555555', price: '#111111', highlight: { bg: '#EB0A1E', text: '#ffffff' }, badge: { bg: '#EB0A1E', text: '#ffffff' }, payBox: { bg: '#EB0A1E', text: '#ffffff' }, payLabel: '#EB0A1E', line: '#EB0A1E', disclaimer: '#777777' },
+    toyota: { name: 'Toyota Red', month: 'Standard', bg: ['#C4081A', '#EB0A1E'], card: 'rgba(0,0,0,0.25)', cardShadow: 'rgba(0,0,0,0.3)', imgBg: 'rgba(0,0,0,0.3)', text: '#ffffff', textSub: 'rgba(255,255,255,0.8)', year: '#ffffff', trim: 'rgba(255,255,255,0.75)', priceLabel: 'rgba(255,255,255,0.8)', price: '#ffffff', highlight: { bg: '#ffffff', text: '#EB0A1E' }, badge: { bg: '#ffffff', text: '#EB0A1E' }, payBox: { bg: '#ffffff', text: '#EB0A1E' }, payLabel: '#ffffff', line: 'rgba(255,255,255,0.5)', disclaimer: 'rgba(255,255,255,0.6)' },
+    premium: { name: 'Premium Gold', month: 'Standard', bg: ['#050505', '#0a0a0a'], card: '#0c0c0c', cardShadow: 'rgba(212,175,55,0.1)', imgBg: '#080808', text: '#ffffff', textSub: '#888888', year: '#D4AF37', trim: '#888888', priceLabel: '#888888', price: '#ffffff', highlight: { bg: '#D4AF37', text: '#000000' }, badge: { bg: '#D4AF37', text: '#000000' }, payBox: { bg: '#D4AF37', text: '#000000' }, payLabel: '#D4AF37', line: '#D4AF37', disclaimer: '#555555' },
+    valentine: { name: "Valentine's", month: 'February', bg: ['#1a0a10', '#2d1020'], card: '#2a1525', cardShadow: 'rgba(0,0,0,0.5)', imgBg: '#1a0a12', text: '#ffffff', textSub: '#d4a0b0', year: '#FF4D6D', trim: '#c090a0', priceLabel: '#d4a0b0', price: '#ffffff', highlight: { bg: '#FF4D6D', text: '#ffffff' }, badge: { bg: '#FF4D6D', text: '#ffffff' }, payBox: { bg: '#FF4D6D', text: '#ffffff' }, payLabel: '#FF4D6D', line: '#FF4D6D', disclaimer: '#907080' },
+    memorial: { name: 'Memorial Day', month: 'May', bg: ['#0D1B2A', '#1B2838'], card: '#1e3a50', cardShadow: 'rgba(0,0,0,0.4)', imgBg: '#152535', text: '#ffffff', textSub: '#a0b4c8', year: '#E53935', trim: '#90a4b8', priceLabel: '#a0b4c8', price: '#ffffff', highlight: { bg: '#E53935', text: '#ffffff' }, badge: { bg: '#1565C0', text: '#ffffff' }, payBox: { bg: '#E53935', text: '#ffffff' }, payLabel: '#E53935', line: '#ffffff', disclaimer: '#7090a8' },
+    summer: { name: 'Summer', month: 'June', bg: ['#0077B6', '#00B4D8'], card: 'rgba(255,255,255,0.15)', cardShadow: 'rgba(0,0,0,0.2)', imgBg: 'rgba(0,0,0,0.2)', text: '#ffffff', textSub: 'rgba(255,255,255,0.85)', year: '#FFD166', trim: 'rgba(255,255,255,0.75)', priceLabel: 'rgba(255,255,255,0.85)', price: '#ffffff', highlight: { bg: '#FFD166', text: '#0077B6' }, badge: { bg: '#ffffff', text: '#0077B6' }, payBox: { bg: '#FFD166', text: '#0077B6' }, payLabel: '#FFD166', line: '#FFD166', disclaimer: 'rgba(255,255,255,0.6)' },
+    july4th: { name: '4th of July', month: 'July', bg: ['#002868', '#0A3A7A'], card: '#0d3d80', cardShadow: 'rgba(0,0,0,0.4)', imgBg: '#082d60', text: '#ffffff', textSub: '#b8c8e8', year: '#BF0A30', trim: '#a8b8d8', priceLabel: '#b8c8e8', price: '#ffffff', highlight: { bg: '#BF0A30', text: '#ffffff' }, badge: { bg: '#BF0A30', text: '#ffffff' }, payBox: { bg: '#BF0A30', text: '#ffffff' }, payLabel: '#ffffff', line: '#ffffff', disclaimer: '#8898b8' },
+    fall: { name: 'Fall', month: 'October', bg: ['#2D1B0E', '#4A2C17'], card: '#3d2414', cardShadow: 'rgba(0,0,0,0.5)', imgBg: '#251508', text: '#FFF8F0', textSub: '#D4A574', year: '#FF8C00', trim: '#C49664', priceLabel: '#D4A574', price: '#FFF8F0', highlight: { bg: '#FF8C00', text: '#2D1B0E' }, badge: { bg: '#DC143C', text: '#ffffff' }, payBox: { bg: '#FF8C00', text: '#2D1B0E' }, payLabel: '#FF8C00', line: '#FF8C00', disclaimer: '#A08060' },
+    holiday: { name: 'Holiday', month: 'December', bg: ['#1B4332', '#2D6A4F'], card: '#245740', cardShadow: 'rgba(0,0,0,0.4)', imgBg: '#153728', text: '#ffffff', textSub: '#A7C4A0', year: '#DC143C', trim: '#95B88F', priceLabel: '#A7C4A0', price: '#ffffff', highlight: { bg: '#DC143C', text: '#ffffff' }, badge: { bg: '#FFD700', text: '#1B4332' }, payBox: { bg: '#DC143C', text: '#ffffff' }, payLabel: '#FFD700', line: '#FFD700', disclaimer: '#74A37A' },
+};
+
+const MARGIN = 90;
+let uiTheme = 'light', slideTheme = 'dark', logoIdx = 2, logoImg = null;
+let vehicles = [], currentIdx = 0, zoom = 0.5;
+let feedVehicles = [], selectedIds = new Set(), feedSort = { col: 'days', dir: 'asc' };
+let visibility = { showBadge: true, showStock: true, showYear: true, showTrim: true, showPriceLabel: true, showHighlight: true, showPayment: true, showDown: true, showDisclaimer: true };
+let customLogos = [];
+const SAMPLE = { year: '2025', make: 'Toyota', model: 'Camry', trim: 'XSE V6', stock: 'T12345', price: 34999, payment: 499, down: 2999, imageUrl: '', imageObj: null, overrideBadge: '', overrideHighlight: '', overrideAccentColor: '', hidePayment: false };
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+    loadStorage();
+    renderThemes();
+    renderLogos();
+    renderFeedTable();
+    renderInventory();
+    updateVehiclePanel();
+    if (window.firebaseReady) loadLayouts(); else document.addEventListener('firebaseReady', loadLayouts);
+    document.addEventListener('keydown', e => {
+        if (['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+        if (e.key === 'Escape') { closeAllModals(); closePreview(); }
+        if (e.key === 'ArrowLeft') prevVehicle();
+        if (e.key === 'ArrowRight') nextVehicle();
+    });
+});
+
+// ==================== VIEWS ====================
+function switchView(v) {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.view === v));
+    document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+    document.getElementById(v + 'View').classList.add('active');
+    if (v === 'design') { setTimeout(() => { initCanvas(); loadLogo().then(updatePreview); }, 50); }
+    if (v === 'inventory') renderInventory();
+}
+
+// ==================== THEMES ====================
+function renderThemes() {
+    document.getElementById('themeGrid').innerHTML = Object.entries(THEMES).map(([k, t]) => 
+        `<div class="theme-card ${k === slideTheme ? 'selected' : ''}" onclick="selectTheme('${k}')"><div class="theme-preview" style="background:linear-gradient(135deg,${t.bg[0]},${t.bg[1]})"></div><div class="theme-name">${t.name}</div><div class="theme-month">${t.month}</div></div>`
+    ).join('');
+}
+function selectTheme(t) { slideTheme = t; renderThemes(); saveStorage(); updatePreview(); }
+
+// ==================== LOGOS ====================
+function renderLogos() {
+    const all = [...LOGOS, ...customLogos];
+    document.getElementById('logoGrid').innerHTML = all.map((l, i) =>
+        `<div class="logo-option ${i === logoIdx ? 'selected' : ''} ${l.dark ? 'dark-bg' : ''}" onclick="selectLogo(${i})"><img src="${l.url}" onerror="this.parentElement.innerHTML='⚠️'"></div>`
+    ).join('') + `<div class="logo-option add" onclick="showModal('logoModal')"><span>+</span>Add</div>`;
+}
+function selectLogo(i) { logoIdx = i; renderLogos(); saveStorage(); loadLogo().then(updatePreview); }
+async function loadLogo() {
+    const all = [...LOGOS, ...customLogos];
+    const logo = all[logoIdx];
+    if (!logo) return;
+    return new Promise(r => { const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => { logoImg = img; r(); }; img.onerror = () => { logoImg = null; r(); }; img.src = logo.url; });
+}
+function addCustomLogo() {
+    const url = document.getElementById('customLogoUrl').value.trim();
+    if (!url) return toast('Enter URL', 'error');
+    const dark = document.getElementById('customLogoDark').classList.contains('active');
+    customLogos.push({ url, dark });
+    renderLogos();
+    closeModal('logoModal');
+    document.getElementById('customLogoUrl').value = '';
+    toast('Logo added');
+}
+
+// ==================== CANVAS ====================
+function initCanvas() {
+    const cont = document.getElementById('canvasCont'), wrap = document.getElementById('canvasWrap');
+    const rect = cont.getBoundingClientRect();
+    zoom = Math.max(0.4, Math.min((rect.width - 40) / 1920, (rect.height - 40) / 1080, 1));
+    wrap.style.width = Math.floor(1920 * zoom) + 'px';
+    wrap.style.height = Math.floor(1080 * zoom) + 'px';
+    document.getElementById('zoomDisp').textContent = Math.round(zoom * 100) + '%';
+}
+function zoomIn() { zoom = Math.min(1, zoom + 0.1); updateZoom(); }
+function zoomOut() { zoom = Math.max(0.2, zoom - 0.1); updateZoom(); }
+function zoomFit() { initCanvas(); }
+function updateZoom() { const w = document.getElementById('canvasWrap'); w.style.width = Math.floor(1920 * zoom) + 'px'; w.style.height = Math.floor(1080 * zoom) + 'px'; document.getElementById('zoomDisp').textContent = Math.round(zoom * 100) + '%'; }
+
+let updateTO;
+function updatePreview() { clearTimeout(updateTO); updateTO = setTimeout(() => { const ctx = document.getElementById('mainCanvas').getContext('2d'); const v = vehicles[currentIdx] || SAMPLE; loadVehicleImage(v).then(() => drawSlide(ctx, v, 1920, 1080, 1, currentIdx)); }, 50); }
+
+async function loadVehicleImage(v) { if (v.imageObj || !v.imageUrl) return; return new Promise(r => { const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => { v.imageObj = img; r(); }; img.onerror = r; img.src = v.imageUrl; }); }
+
+function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r); ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath(); }
+
+function drawSlide(ctx, v, W, H, opacity, idx) {
+    const T = THEMES[slideTheme];
+    const S = { badgeText: document.getElementById('badgeText')?.value || 'PRE-OWNED SPECIAL', priceLabelText: document.getElementById('priceLabelText')?.value || 'BUY FOR ONLY', highlightText: document.getElementById('highlightText')?.value || '$0 DOWN', paymentLabel: document.getElementById('paymentLabel')?.value || 'OR PAYMENTS FROM', paymentSuffix: document.getElementById('paymentSuffix')?.value || '/MO', disclaimer: document.getElementById('disclaimer')?.value || '', logoSize: parseInt(document.getElementById('logoSize')?.value) || 120, imgPos: document.getElementById('imgPos')?.value || 'left', imgSize: document.getElementById('imgSize')?.value || 'medium', badgePos: document.getElementById('badgePos')?.value || 'top-right', cardStyle: document.getElementById('cardStyle')?.value || 'shadow' };
+    const makeFont = document.getElementById('makeFont')?.value || 'Toyota Type';
+    const makeSize = parseInt(document.getElementById('makeSize')?.value) || 56;
+    const priceFont = document.getElementById('priceFont')?.value || 'Toyota Type';
+    const priceSize = parseInt(document.getElementById('priceSize')?.value) || 72;
+    
+    const accent = v.overrideAccentColor || null;
+    const badgeText = v.overrideBadge || S.badgeText;
+    const highlightText = v.overrideHighlight || S.highlightText;
+    const showPay = visibility.showPayment && !v.hidePayment && v.payment > 0;
+    const badgeBg = accent || T.badge.bg, highlightBg = accent || T.highlight.bg, payBoxBg = accent || T.payBox.bg, yearColor = accent || T.year, lineColor = accent || T.line;
+    let imgOnRight = S.imgPos === 'right'; if (S.imgPos === 'alternate') imgOnRight = idx % 2 === 1;
+    const badgeLeft = S.badgePos === 'top-left';
+    
+    ctx.globalAlpha = opacity;
+    const bg = ctx.createLinearGradient(0, 0, W, H); bg.addColorStop(0, T.bg[0]); bg.addColorStop(1, T.bg[1]); ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    const hg = ctx.createLinearGradient(0, 0, 0, 200); hg.addColorStop(0, 'rgba(0,0,0,0.35)'); hg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = hg; ctx.fillRect(0, 0, W, 200);
+    
+    if (logoImg) { const r = logoImg.width / logoImg.height, lW = S.logoSize * r, lX = badgeLeft ? W - MARGIN - lW : MARGIN; ctx.drawImage(logoImg, lX, MARGIN - 15, lW, S.logoSize); }
+    
+    if (visibility.showBadge) { ctx.font = `700 16px "Toyota Type", sans-serif`; const bW = ctx.measureText(badgeText).width + 32, bH = 38, bX = badgeLeft ? MARGIN : W - MARGIN - bW, bY = MARGIN - 10; if (S.cardStyle === 'shadow') { ctx.fillStyle = 'rgba(0,0,0,0.3)'; roundRect(ctx, bX + 2, bY + 2, bW, bH, 4); ctx.fill(); } ctx.fillStyle = badgeBg; roundRect(ctx, bX, bY, bW, bH, 4); ctx.fill(); ctx.fillStyle = T.badge.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(badgeText, bX + bW / 2, bY + bH / 2); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
+    
+    const cardX = MARGIN, cardY = MARGIN + 105, cardW = W - MARGIN * 2, cardH = H - cardY - MARGIN - (visibility.showDisclaimer ? 55 : 20);
+    if (S.cardStyle === 'shadow') { ctx.fillStyle = T.cardShadow; roundRect(ctx, cardX + 4, cardY + 4, cardW, cardH, 16); ctx.fill(); }
+    ctx.fillStyle = T.card; roundRect(ctx, cardX, cardY, cardW, cardH, 16); ctx.fill();
+    if (S.cardStyle === 'border') { ctx.strokeStyle = accent || T.line; ctx.lineWidth = 2; roundRect(ctx, cardX, cardY, cardW, cardH, 16); ctx.stroke(); }
+    
+    const imgRatios = { small: 0.40, medium: 0.46, large: 0.52 }, imgRatio = imgRatios[S.imgSize] || 0.46, imgPad = 20;
+    const imgW = cardW * imgRatio, imgH = cardH - imgPad * 2;
+    const imgX = imgOnRight ? cardX + cardW - imgPad - imgW : cardX + imgPad, imgY = cardY + imgPad;
+    ctx.fillStyle = T.imgBg; roundRect(ctx, imgX, imgY, imgW, imgH, 12); ctx.fill();
+    if (v.imageObj) { ctx.save(); roundRect(ctx, imgX, imgY, imgW, imgH, 12); ctx.clip(); const ir = v.imageObj.width / v.imageObj.height, ar = imgW / imgH; let dw, dh, dx, dy; if (ir > ar) { dh = imgH; dw = dh * ir; dx = imgX + (imgW - dw) / 2; dy = imgY; } else { dw = imgW; dh = dw / ir; dx = imgX; dy = imgY + (imgH - dh) / 2; } ctx.drawImage(v.imageObj, dx, dy, dw, dh); ctx.restore(); }
+    
+    const infoX = imgOnRight ? cardX + imgPad + 20 : imgX + imgW + 40, infoW = cardW - imgW - imgPad - 80;
+    let Y = cardY + 40;
+    
+    if (visibility.showStock) { ctx.font = `600 14px "Toyota Type", sans-serif`; const sText = `Stock #${v.stock}`, sW = ctx.measureText(sText).width + 18, sH = 28; ctx.fillStyle = 'rgba(128,128,128,0.12)'; roundRect(ctx, infoX + infoW - sW, Y, sW, sH, sH / 2); ctx.fill(); ctx.fillStyle = T.textSub; ctx.textBaseline = 'middle'; ctx.fillText(sText, infoX + infoW - sW + 9, Y + sH / 2); ctx.textBaseline = 'alphabetic'; }
+    Y += 45;
+    
+    if (visibility.showYear) { ctx.font = `700 24px "Toyota Type", sans-serif`; ctx.fillStyle = yearColor; ctx.fillText(v.year, infoX, Y); Y += 32; }
+    
+    let fs = makeSize; ctx.font = `900 ${fs}px "${makeFont}", sans-serif`; while (ctx.measureText(v.make.toUpperCase()).width > infoW - 10 && fs > 24) { fs -= 2; ctx.font = `900 ${fs}px "${makeFont}", sans-serif`; } ctx.fillStyle = T.text; ctx.fillText(v.make.toUpperCase(), infoX, Y); Y += fs * 0.85;
+    
+    fs = makeSize; ctx.font = `700 ${fs}px "${makeFont}", sans-serif`; while (ctx.measureText(v.model.toUpperCase()).width > infoW - 10 && fs > 24) { fs -= 2; ctx.font = `700 ${fs}px "${makeFont}", sans-serif`; } ctx.fillText(v.model.toUpperCase(), infoX, Y); Y += fs * 0.85 + 8;
+    
+    if (visibility.showTrim) { ctx.font = `500 20px "Toyota Type", sans-serif`; ctx.fillStyle = T.trim; ctx.fillText(v.trim.toUpperCase(), infoX, Y); Y += 44; } else Y += 10;
+    
+    if (visibility.showPriceLabel) { ctx.font = `700 14px "Toyota Type", sans-serif`; ctx.fillStyle = T.priceLabel; ctx.fillText(S.priceLabelText.toUpperCase(), infoX, Y); Y += 22; }
+    
+    ctx.font = `900 ${priceSize}px "${priceFont}", sans-serif`; ctx.fillStyle = T.price; const priceText = '$' + v.price.toLocaleString(), priceW = ctx.measureText(priceText).width; ctx.fillText(priceText, infoX, Y + priceSize * 0.8);
+    
+    if (visibility.showHighlight) { ctx.font = `700 18px "Toyota Type", sans-serif`; const hlW = ctx.measureText(highlightText).width + 26, hlH = 38, hlX = infoX + priceW + 20, hlY = Y + priceSize * 0.4 - hlH / 2 + 5; if (S.cardStyle === 'shadow') { ctx.fillStyle = 'rgba(0,0,0,0.2)'; roundRect(ctx, hlX + 2, hlY + 2, hlW, hlH, 4); ctx.fill(); } ctx.fillStyle = highlightBg; roundRect(ctx, hlX, hlY, hlW, hlH, 4); ctx.fill(); ctx.fillStyle = T.highlight.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(highlightText, hlX + hlW / 2, hlY + hlH / 2); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'; }
+    
+    if (showPay) {
+        Y += priceSize + 24;
+        ctx.font = `700 14px "Toyota Type", sans-serif`; ctx.fillStyle = accent || T.payLabel; const plW = ctx.measureText(S.paymentLabel.toUpperCase()).width;
+        ctx.strokeStyle = lineColor; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(infoX, Y - 4); ctx.lineTo(infoX + 35, Y - 4); ctx.stroke(); ctx.fillText(S.paymentLabel.toUpperCase(), infoX + 47, Y); ctx.beginPath(); ctx.moveTo(infoX + 47 + plW + 12, Y - 4); ctx.lineTo(infoX + 47 + plW + 47, Y - 4); ctx.stroke();
+        Y += 20;
+        const payAmt = '$' + v.payment + S.paymentSuffix; ctx.font = `900 48px "Toyota Type", sans-serif`; const payW = ctx.measureText(payAmt).width, boxW = 56 + payW, boxH = 76;
+        if (S.cardStyle === 'shadow') { ctx.fillStyle = 'rgba(0,0,0,0.25)'; roundRect(ctx, infoX + 3, Y + 3, boxW, boxH, 8); ctx.fill(); }
+        ctx.fillStyle = payBoxBg; roundRect(ctx, infoX, Y, boxW, boxH, 8); ctx.fill();
+        ctx.fillStyle = T.payBox.text; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(payAmt, infoX + boxW / 2, Y + boxH / 2 + 2); ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        if (visibility.showDown && v.down > 0) { ctx.font = `500 16px "Toyota Type", sans-serif`; ctx.fillStyle = T.textSub; ctx.fillText('with $' + v.down.toLocaleString() + ' down', infoX, Y + boxH + 24); }
+    }
+    
+    if (visibility.showDisclaimer && S.disclaimer) { ctx.font = `400 12px "Toyota Type", sans-serif`; ctx.fillStyle = T.disclaimer; ctx.textAlign = 'center'; ctx.fillText(S.disclaimer, W / 2, H - MARGIN + 20); ctx.textAlign = 'left'; }
+    ctx.globalAlpha = 1;
+}
+
+// ==================== VISIBILITY ====================
+function toggleVis(el) { const key = el.id; visibility[key] = !visibility[key]; el.classList.toggle('active', visibility[key]); saveStorage(); updatePreview(); }
+
+// ==================== VEHICLE MANAGEMENT ====================
+function updateVehiclePanel() {
+    const v = vehicles[currentIdx];
+    document.getElementById('cvName').textContent = v ? `${v.year} ${v.make} ${v.model}` : 'No vehicle';
+    document.getElementById('cvStock').textContent = v ? `#${v.stock} · ${v.trim}` : '-';
+    document.getElementById('cvPrice').textContent = v ? '$' + v.price.toLocaleString() : '-';
+    document.getElementById('navTitle').textContent = v ? `${v.year} ${v.make} ${v.model}` : 'Sample Vehicle';
+    document.getElementById('navSub').textContent = v ? `${currentIdx + 1} of ${vehicles.length}` : 'Add vehicles';
+    document.getElementById('invBadge').textContent = vehicles.length;
+    if (v) { document.getElementById('ovBadge').value = v.overrideBadge || ''; document.getElementById('ovHighlight').value = v.overrideHighlight || ''; document.getElementById('ovColor').value = v.overrideAccentColor || ''; document.getElementById('ovHidePay').classList.toggle('active', v.hidePayment); }
+}
+function updateOverride() { if (!vehicles[currentIdx]) return; vehicles[currentIdx].overrideBadge = document.getElementById('ovBadge').value; vehicles[currentIdx].overrideHighlight = document.getElementById('ovHighlight').value; vehicles[currentIdx].overrideAccentColor = document.getElementById('ovColor').value; saveStorage(); updatePreview(); }
+function toggleOverride(el) { if (!vehicles[currentIdx]) return; el.classList.toggle('active'); vehicles[currentIdx].hidePayment = el.classList.contains('active'); saveStorage(); updatePreview(); }
+function prevVehicle() { if (!vehicles.length) return; currentIdx = (currentIdx - 1 + vehicles.length) % vehicles.length; updateVehiclePanel(); updatePreview(); }
+function nextVehicle() { if (!vehicles.length) return; currentIdx = (currentIdx + 1) % vehicles.length; updateVehiclePanel(); updatePreview(); }
+
+function renderInventory() {
+    const search = (document.getElementById('invSearch')?.value || '').toLowerCase();
+    const filtered = vehicles.filter(v => !search || `${v.year} ${v.make} ${v.model} ${v.trim} ${v.stock}`.toLowerCase().includes(search));
+    document.getElementById('invCount').textContent = `${vehicles.length} vehicles`;
+    document.getElementById('invBadge').textContent = vehicles.length;
+    if (!filtered.length) { document.getElementById('invGrid').innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🚗</div><div class="empty-title">${vehicles.length ? 'No matches' : 'No vehicles'}</div></div>`; return; }
+    document.getElementById('invGrid').innerHTML = filtered.map(v => { const i = vehicles.indexOf(v); return `<div class="card">${v.imageUrl ? `<img class="card-img" src="${v.imageUrl}" onerror="this.style.display='none'">` : '<div class="card-img"></div>'}<div class="card-body"><div class="card-title">${v.year} ${v.make} ${v.model}</div><div class="card-subtitle">${v.trim} · #${v.stock}</div><div class="card-price">$${v.price.toLocaleString()}</div><div class="card-actions"><button class="btn btn-sm" onclick="goToVehicle(${i})">View</button><button class="btn btn-sm" onclick="openEdit(${i})">Edit</button><button class="btn btn-sm btn-danger" onclick="deleteVehicle(${i})">×</button></div></div></div>`; }).join('');
+}
+function goToVehicle(i) { currentIdx = i; switchView('design'); updateVehiclePanel(); updatePreview(); }
+function addVehicle() { const nv = { year: document.getElementById('newYear').value, make: document.getElementById('newMake').value, model: document.getElementById('newModel').value, trim: document.getElementById('newTrim').value, stock: document.getElementById('newStock').value, price: parseInt(document.getElementById('newPrice').value) || 0, payment: parseInt(document.getElementById('newPayment').value) || 0, down: parseInt(document.getElementById('newDown').value) || 0, imageUrl: document.getElementById('newImageUrl').value, imageObj: null, overrideBadge: '', overrideHighlight: '', overrideAccentColor: '', hidePayment: false }; vehicles.push(nv); currentIdx = vehicles.length - 1; saveStorage(); renderInventory(); updateVehiclePanel(); closeModal('addModal'); ['newYear','newMake','newModel','newTrim','newStock','newPrice','newPayment','newDown','newImageUrl'].forEach(id => document.getElementById(id).value = ''); toast('Vehicle added'); }
+function openEdit(i) { const v = vehicles[i]; document.getElementById('editIdx').value = i; document.getElementById('editYear').value = v.year; document.getElementById('editMake').value = v.make; document.getElementById('editModel').value = v.model; document.getElementById('editTrim').value = v.trim; document.getElementById('editStock').value = v.stock; document.getElementById('editPrice').value = v.price; document.getElementById('editPayment').value = v.payment; document.getElementById('editDown').value = v.down; document.getElementById('editImageUrl').value = v.imageUrl; showModal('editModal'); }
+function saveEdit() { const i = parseInt(document.getElementById('editIdx').value), v = vehicles[i]; if (!v) return; v.year = document.getElementById('editYear').value; v.make = document.getElementById('editMake').value; v.model = document.getElementById('editModel').value; v.trim = document.getElementById('editTrim').value; v.stock = document.getElementById('editStock').value; v.price = parseInt(document.getElementById('editPrice').value) || 0; v.payment = parseInt(document.getElementById('editPayment').value) || 0; v.down = parseInt(document.getElementById('editDown').value) || 0; v.imageUrl = document.getElementById('editImageUrl').value; v.imageObj = null; saveStorage(); renderInventory(); updateVehiclePanel(); updatePreview(); closeModal('editModal'); toast('Saved'); }
+function deleteVehicle(i) { vehicles.splice(i, 1); if (currentIdx >= vehicles.length) currentIdx = Math.max(0, vehicles.length - 1); saveStorage(); renderInventory(); updateVehiclePanel(); updatePreview(); toast('Deleted'); }
+function shuffleVehicles() { for (let i = vehicles.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [vehicles[i], vehicles[j]] = [vehicles[j], vehicles[i]]; } currentIdx = 0; saveStorage(); renderInventory(); updateVehiclePanel(); updatePreview(); toast('Shuffled'); }
+function clearAllVehicles() { if (!vehicles.length || !confirm(`Delete all ${vehicles.length}?`)) return; vehicles = []; currentIdx = 0; saveStorage(); renderInventory(); updateVehiclePanel(); updatePreview(); toast('Cleared'); }
+
+// ==================== FEED ====================
+function loadFeedFile(ev) { const f = ev.target.files[0]; if (!f) return; const isExcel = f.name.endsWith('.xlsx') || f.name.endsWith('.xls'); if (isExcel) { const r = new FileReader(); r.onload = e => { try { const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); const csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]); parseFeedCSV(csv); toast('Feed loaded'); } catch (err) { toast('Parse error', 'error'); } }; r.readAsArrayBuffer(f); } else { const r = new FileReader(); r.onload = e => { try { parseFeedCSV(e.target.result); toast('Feed loaded'); } catch (err) { toast('Parse error', 'error'); } }; r.readAsText(f); } ev.target.value = ''; }
+async function loadFeedUrl() { const url = document.getElementById('feedUrl').value.trim(); if (!url) return toast('Enter URL', 'error'); let fetchUrl = url; if (url.includes('docs.google.com/spreadsheets')) { const m = url.match(/\/d\/([a-zA-Z0-9-_]+)/); if (m) fetchUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`; } try { const res = await fetch(fetchUrl); if (res.ok) { parseFeedCSV(await res.text()); toast('Feed loaded'); return; } } catch (e) {} for (const proxy of [u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`]) { try { const res = await fetch(proxy(fetchUrl)); if (res.ok) { parseFeedCSV(await res.text()); toast('Feed loaded'); return; } } catch (e) {} } toast('Load failed', 'error'); }
+function parseCSV(text) { const rows = []; let row = [], field = '', i = 0, inQ = false; while (i < text.length) { const c = text[i]; if (inQ) { if (c === '"') { if (text[i + 1] === '"') { field += '"'; i += 2; continue; } inQ = false; i++; continue; } field += c; i++; } else { if (c === '"') { inQ = true; i++; continue; } if (c === ',') { row.push(field); field = ''; i++; continue; } if (c === '\r') { i++; continue; } if (c === '\n') { row.push(field); field = ''; rows.push(row); row = []; i++; continue; } field += c; i++; } } row.push(field); if (row.length > 1 || row[0].trim()) rows.push(row); return rows; }
+function parseFeedCSV(text) { const rows = parseCSV(text); if (rows.length < 2) throw new Error('No data'); const h = rows[0].map(s => (s || '').toLowerCase().trim()); const idx = n => h.findIndex(x => x === n.toLowerCase()); const col = { vin: idx('vin'), stock: idx('stock #'), type: idx('new/used'), year: idx('year'), make: idx('make'), model: idx('model'), series: idx('series'), price: idx('price'), invDate: idx('inventory date'), photo: idx('photo url list') }; feedVehicles = []; for (let i = 1; i < rows.length; i++) { const r = rows[i]; if (!r || r.length < 5) continue; const stock = (col.stock >= 0 ? r[col.stock] : '').trim(), vin = (col.vin >= 0 ? r[col.vin] : '').trim(); if (!stock && !vin) continue; const price = parseInt(String(col.price >= 0 ? r[col.price] : '').replace(/[^0-9]/g, '')) || 0; const photoList = col.photo >= 0 ? r[col.photo] : '', imageUrl = (photoList || '').split('|')[0].trim(); const invDate = col.invDate >= 0 ? r[col.invDate] : '', days = calcDays(invDate); feedVehicles.push({ id: `${stock || vin}_${i}`, vin, stock, type: (col.type >= 0 ? (r[col.type] || '').trim() : ''), year: (col.year >= 0 ? r[col.year] : '').trim(), make: (col.make >= 0 ? r[col.make] : '').trim(), model: (col.model >= 0 ? r[col.model] : '').trim(), series: (col.series >= 0 ? (r[col.series] || '').trim() : ''), price, days, imageUrl: imageUrl && imageUrl !== '.' ? imageUrl : '' }); } selectedIds = new Set(); hydrateDropdowns(); renderFeedTable(); }
+function calcDays(s) { if (!s) return null; const p = String(s).split('/'); if (p.length !== 3) return null; const d = new Date(parseInt(p[2]), parseInt(p[0]) - 1, parseInt(p[1])); if (isNaN(d)) return null; return Math.max(0, Math.floor((Date.now() - d) / 86400000)); }
+function hydrateDropdowns() { const makes = [...new Set(feedVehicles.map(v => v.make).filter(Boolean))].sort(), years = [...new Set(feedVehicles.map(v => v.year).filter(Boolean))].sort((a, b) => b - a); document.getElementById('feedMake').innerHTML = '<option value="all">All Makes</option>' + makes.map(m => `<option>${m}</option>`).join(''); document.getElementById('feedModel').innerHTML = '<option value="all">All Models</option>'; document.getElementById('feedYear').innerHTML = '<option value="all">All Years</option>' + years.map(y => `<option>${y}</option>`).join(''); }
+function onMakeChange() { const make = document.getElementById('feedMake').value; const models = make === 'all' ? [...new Set(feedVehicles.map(v => v.model).filter(Boolean))] : [...new Set(feedVehicles.filter(v => v.make === make).map(v => v.model).filter(Boolean))]; models.sort(); document.getElementById('feedModel').innerHTML = '<option value="all">All Models</option>' + models.map(m => `<option>${m}</option>`).join(''); renderFeedTable(); }
+function getFilters() { return { q: (document.getElementById('feedSearch')?.value || '').toLowerCase(), type: document.getElementById('feedType')?.value || 'all', make: document.getElementById('feedMake')?.value || 'all', model: document.getElementById('feedModel')?.value || 'all', year: document.getElementById('feedYear')?.value || 'all', hasImg: document.getElementById('feedHasImg')?.checked }; }
+function filteredFeed() { const f = getFilters(); return feedVehicles.filter(v => { if (f.hasImg && !v.imageUrl) return false; if (f.type !== 'all' && (v.type || '').toUpperCase() !== f.type) return false; if (f.make !== 'all' && v.make !== f.make) return false; if (f.model !== 'all' && v.model !== f.model) return false; if (f.year !== 'all' && v.year !== f.year) return false; if (f.q && !`${v.stock} ${v.vin}`.toLowerCase().includes(f.q)) return false; return true; }); }
+function setSort(col) { if (feedSort.col === col) feedSort.dir = feedSort.dir === 'asc' ? 'desc' : 'asc'; else { feedSort.col = col; feedSort.dir = 'asc'; } renderFeedTable(); }
+function sortedFeed(list) { const dir = feedSort.dir === 'asc' ? 1 : -1, col = feedSort.col; return list.slice().sort((a, b) => { const va = col === 'price' ? a.price : col === 'days' ? (a.days ?? 999999) : col === 'type' ? a.type : col === 'stock' ? a.stock : `${a.year} ${a.make} ${a.model}`; const vb = col === 'price' ? b.price : col === 'days' ? (b.days ?? 999999) : col === 'type' ? b.type : col === 'stock' ? b.stock : `${b.year} ${b.make} ${b.model}`; if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dir; return String(va).localeCompare(String(vb)) * dir; }); }
+function renderFeedTable() { const list = sortedFeed(filteredFeed()); document.getElementById('feedCount').textContent = `${list.length} of ${feedVehicles.length}`; if (!list.length) { document.getElementById('feedBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">No vehicles</td></tr>'; return; } document.getElementById('feedBody').innerHTML = list.map(v => { const sel = selectedIds.has(v.id), daysClass = v.days >= 60 ? 'danger' : v.days >= 45 ? 'warning' : ''; return `<tr class="${sel ? 'selected' : ''}" onclick="toggleRow('${v.id}')"><td><input type="checkbox" ${sel ? 'checked' : ''} onclick="event.stopPropagation();toggleRow('${v.id}')"></td><td>${v.imageUrl ? `<img class="feed-thumb" src="${v.imageUrl}" onerror="this.style.display='none'">` : '<div class="feed-thumb"></div>'}</td><td><strong>${v.year} ${v.make} ${v.model}</strong><div style="font-size:0.8rem;color:var(--text-muted)">${v.series}</div></td><td>${v.stock}</td><td>${v.type === 'N' ? 'New' : v.type === 'U' ? 'Used' : v.type}</td><td>$${v.price.toLocaleString()}</td><td><span class="days-pill ${daysClass}">${v.days !== null ? v.days + 'd' : '-'}</span></td></tr>`; }).join(''); }
+function toggleSelectAll(checked) { const list = sortedFeed(filteredFeed()); if (checked) list.forEach(v => selectedIds.add(v.id)); else list.forEach(v => selectedIds.delete(v.id)); renderFeedTable(); }
+function toggleRow(id) { if (selectedIds.has(id)) selectedIds.delete(id); else selectedIds.add(id); renderFeedTable(); }
+function selectAllFeed() { sortedFeed(filteredFeed()).forEach(v => selectedIds.add(v.id)); renderFeedTable(); toast(`Selected ${selectedIds.size}`); }
+function clearFeedSelection() { selectedIds = new Set(); document.getElementById('feedSelectAll').checked = false; renderFeedTable(); }
+function roundTo9(p) { return Math.ceil(p / 10) * 10 - 1; }
+function calcPayment(price, rate, term, down) { const prin = (price || 0) - (down || 0); if (prin <= 0) return 0; const mr = (rate || 0) / 100 / 12; if (!mr) return roundTo9(prin / (term || 1)); return roundTo9(prin * (mr * Math.pow(1 + mr, term)) / (Math.pow(1 + mr, term) - 1)); }
+function transferToInventory() { const selected = feedVehicles.filter(v => selectedIds.has(v.id)); if (!selected.length) return toast('Select vehicles', 'error'); const rate = parseFloat(document.getElementById('globalRate').value) || 7.9, term = parseInt(document.getElementById('globalTerm').value) || 72, down = parseInt(document.getElementById('globalDown').value) || 0; selected.forEach(fv => { vehicles.push({ year: fv.year, make: fv.make, model: fv.model, trim: fv.series, stock: fv.stock, price: fv.price, payment: calcPayment(fv.price, rate, term, down), down, imageUrl: fv.imageUrl, imageObj: null, overrideBadge: '', overrideHighlight: '', overrideAccentColor: '', hidePayment: false }); }); saveStorage(); selectedIds = new Set(); renderFeedTable(); renderInventory(); updateVehiclePanel(); toast(`Added ${selected.length} vehicles`); }
+
+// ==================== STORAGE ====================
+function saveStorage() { const data = { vehicles: vehicles.map(v => ({ ...v, imageObj: null })), logoIdx, slideTheme, visibility, customLogos }; localStorage.setItem('slideshower2001', JSON.stringify(data)); }
+function loadStorage() { const s = localStorage.getItem('slideshower2001'); if (s) { try { const d = JSON.parse(s); vehicles = (d.vehicles || []).map(v => ({ ...v, imageObj: null })); logoIdx = d.logoIdx ?? 2; slideTheme = d.slideTheme || 'dark'; if (d.visibility) visibility = { ...visibility, ...d.visibility }; customLogos = d.customLogos || []; } catch (e) {} } }
+
+// ==================== FIREBASE ====================
+async function saveLayout() { if (!window.firebaseReady) return toast('Firebase not ready', 'error'); const name = document.getElementById('layoutName').value.trim(); if (!name) return toast('Enter name', 'error'); try { await window.fbHelpers.setDoc(window.fbHelpers.doc(window.db, 'layouts', name.toLowerCase().replace(/\s+/g, '-')), { name, slideTheme, logoIdx, visibility, createdAt: new Date().toISOString() }); document.getElementById('layoutName').value = ''; loadLayouts(); toast('Layout saved'); } catch (e) { toast('Save failed', 'error'); } }
+async function loadLayouts() { if (!window.firebaseReady) return; try { const snap = await window.fbHelpers.getDocs(window.fbHelpers.collection(window.db, 'layouts')); if (snap.empty) { document.getElementById('savedLayouts').innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem">No layouts</span>'; return; } document.getElementById('savedLayouts').innerHTML = snap.docs.map(d => { const data = d.data(); return `<div class="saved-item" onclick="loadLayout('${d.id}')"><div class="saved-name">${data.name}</div><div class="saved-meta">${data.slideTheme}</div></div>`; }).join(''); } catch (e) {} }
+async function loadLayout(id) { try { const snap = await window.fbHelpers.getDoc(window.fbHelpers.doc(window.db, 'layouts', id)); if (snap.exists()) { const d = snap.data(); slideTheme = d.slideTheme || 'dark'; logoIdx = d.logoIdx ?? 2; if (d.visibility) visibility = { ...visibility, ...d.visibility }; saveStorage(); renderThemes(); renderLogos(); updatePreview(); toast('Layout loaded'); } } catch (e) { toast('Load failed', 'error'); } }
+
+// ==================== IMPORT/EXPORT ====================
+function handleImport(ev) { const f = ev.target.files[0]; if (!f) return; if (f.name.endsWith('.json')) { const r = new FileReader(); r.onload = e => { try { const d = JSON.parse(e.target.result); vehicles = (d.vehicles || []).map(v => ({ ...v, imageObj: null })); logoIdx = d.logoIdx ?? 2; slideTheme = d.slideTheme || 'dark'; if (d.visibility) visibility = { ...visibility, ...d.visibility }; saveStorage(); renderInventory(); updateVehiclePanel(); closeModal('importModal'); toast(`Imported ${vehicles.length}`); } catch (err) { toast('Parse error', 'error'); } }; r.readAsText(f); } else if (f.name.endsWith('.xlsx') || f.name.endsWith('.xls')) { const r = new FileReader(); r.onload = e => { try { const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' }); parseFeedCSV(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]])); closeModal('importModal'); } catch (err) { toast('Parse error', 'error'); } }; r.readAsArrayBuffer(f); } else { const r = new FileReader(); r.onload = e => { try { parseFeedCSV(e.target.result); closeModal('importModal'); } catch (err) { toast('Parse error', 'error'); } }; r.readAsText(f); } ev.target.value = ''; }
+function exportProject() { const data = { version: '2001', vehicles: vehicles.map(v => ({ ...v, imageObj: null })), logoIdx, slideTheme, visibility }; const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `slideshow-${Date.now()}.json`; a.click(); toast('Exported'); }
+
+// ==================== VIDEO ====================
+function previewSlideshow() { if (!vehicles.length) return toast('Add vehicles', 'error'); document.getElementById('previewOverlay').classList.add('active'); const canvas = document.getElementById('previewCanvas'), ctx = canvas.getContext('2d'); let idx = 0; function show() { loadVehicleImage(vehicles[idx]).then(() => { drawSlide(ctx, vehicles[idx], 1920, 1080, 1, idx); document.getElementById('previewTitle').textContent = `${idx + 1}/${vehicles.length} - ${vehicles[idx].year} ${vehicles[idx].make} ${vehicles[idx].model}`; }); } show(); const int = setInterval(() => { idx = (idx + 1) % vehicles.length; show(); }, (parseInt(document.getElementById('slideDur')?.value) || 8) * 1000); document.getElementById('previewOverlay').dataset.int = int; }
+function closePreview() { clearInterval(document.getElementById('previewOverlay').dataset.int); document.getElementById('previewOverlay').classList.remove('active'); }
+async function generateVideo() { if (!vehicles.length) return toast('Add vehicles', 'error'); showModal('progressModal'); document.getElementById('progressTitle').textContent = 'Generating...'; document.getElementById('progressText').textContent = 'Loading images...'; document.getElementById('progressFill').style.width = '5%'; for (let i = 0; i < vehicles.length; i++) { await loadVehicleImage(vehicles[i]); document.getElementById('progressFill').style.width = (5 + (i / vehicles.length) * 35) + '%'; } const res = (document.getElementById('videoRes')?.value || '1920x1080').split('x'), W = parseInt(res[0]), H = parseInt(res[1]); const fps = parseInt(document.getElementById('fps')?.value) || 30, slideDur = parseFloat(document.getElementById('slideDur')?.value) || 8, transDur = parseFloat(document.getElementById('transDur')?.value) || 1, transType = document.getElementById('transType')?.value || 'slideLeft'; const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H; const ctx = canvas.getContext('2d'); const stream = canvas.captureStream(fps), chunks = []; const rec = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9', videoBitsPerSecond: 8000000 }); rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); }; rec.onstop = () => { const blob = new Blob(chunks, { type: 'video/webm' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `slideshow-${Date.now()}.webm`; a.click(); document.getElementById('progressFill').style.width = '100%'; document.getElementById('progressText').textContent = 'Done!'; setTimeout(() => { closeModal('progressModal'); toast('Downloaded'); }, 1200); }; rec.start(100); document.getElementById('recording').classList.add('active'); const fPS = Math.floor(slideDur * fps), fPT = Math.floor(transDur * fps), total = vehicles.length * (fPS + fPT); let frame = 0; for (let i = 0; i < vehicles.length; i++) { const curr = vehicles[i], next = vehicles[(i + 1) % vehicles.length]; for (let f = 0; f < fPS; f++) { drawSlide(ctx, curr, W, H, 1, i); await new Promise(r => setTimeout(r, 1000 / fps)); frame++; if (f % 5 === 0) { document.getElementById('progressFill').style.width = (40 + frame / total * 55) + '%'; document.getElementById('progressText').textContent = `Slide ${i + 1}/${vehicles.length}`; } } for (let f = 0; f < fPT; f++) { const t = f / fPT; ctx.clearRect(0, 0, W, H); if (transType === 'slideLeft') { ctx.save(); ctx.translate(-W * t, 0); drawSlide(ctx, curr, W, H, 1, i); ctx.translate(W, 0); drawSlide(ctx, next, W, H, 1, i + 1); ctx.restore(); } else if (transType === 'fade') { drawSlide(ctx, curr, W, H, 1 - t, i); drawSlide(ctx, next, W, H, t, i + 1); } else drawSlide(ctx, next, W, H, 1, i + 1); await new Promise(r => setTimeout(r, 1000 / fps)); frame++; } } document.getElementById('recording').classList.remove('active'); rec.stop(); }
+function downloadSlide() { const canvas = document.getElementById('mainCanvas'), v = vehicles[currentIdx] || SAMPLE, a = document.createElement('a'); a.download = `${v.year}-${v.make}-${v.model}-slide.png`; a.href = canvas.toDataURL('image/png'); a.click(); toast('Exported'); }
+
+// ==================== UI HELPERS ====================
+function toggleTheme() { uiTheme = uiTheme === 'light' ? 'dark' : 'light'; document.documentElement.setAttribute('data-theme', uiTheme); document.getElementById('themeBtn').textContent = uiTheme === 'light' ? '◐' : '◑'; }
+function showModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeAllModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active')); }
+function toast(msg, type = 'success') { const t = document.createElement('div'); t.className = `toast ${type}`; t.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem">×</button>`; document.getElementById('toasts').appendChild(t); setTimeout(() => t.remove(), 4000); }
+    </script>
+</body>
+</html>
